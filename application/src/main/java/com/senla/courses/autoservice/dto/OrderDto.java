@@ -7,26 +7,21 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.persistence.*;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @NoArgsConstructor
 @Setter
 @Getter
-public class OrderDto implements Serializable {
+public class OrderDto {
 
     private int id;
-    @Column(name = "start_date")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime submissionDate;
-    @Column(name = "start_date")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime startDate;
-    @Column(name = "start_date")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime endDate;
@@ -49,7 +44,6 @@ public class OrderDto implements Serializable {
         this.status = status;
         this.garagePlace.setBusy(true);
         for (MasterDto master : this.masters) {
-            master.setOrder(this);
             master.setBusy(true);
         }
     }

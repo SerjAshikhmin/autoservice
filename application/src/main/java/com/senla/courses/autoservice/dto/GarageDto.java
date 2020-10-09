@@ -5,13 +5,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.io.Serializable;
 import java.util.List;
 
 @NoArgsConstructor
 @Setter
 @Getter
-public class GarageDto implements Serializable {
+public class GarageDto {
 
     private int id;
     private String address;

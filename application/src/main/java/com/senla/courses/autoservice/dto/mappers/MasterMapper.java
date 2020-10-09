@@ -6,19 +6,25 @@ import com.senla.courses.autoservice.dto.OrderDto;
 import com.senla.courses.autoservice.model.Garage;
 import com.senla.courses.autoservice.model.Master;
 import com.senla.courses.autoservice.model.Order;
+import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
 
+import java.util.List;
+
 
 @Mapper(componentModel="spring")
 public interface MasterMapper {
+    @FullMapping
     MasterDto masterToMasterDto(Master master);
     Master masterDtoToMaster(MasterDto masterDto);
 
-    @Mappings({
-            @Mapping(target = "garagePlaces", ignore = true)
-    })
+    @IterableMapping(qualifiedBy = FullMapping.class)
+    @FullMapping
+    List<MasterDto> masterListToMasterDtoList(List<Master> list);
+
+    @Mapping(target = "garagePlaces", ignore = true)
     GarageDto garageToGarageDto(Garage garage);
 
     @Mappings({
@@ -26,5 +32,4 @@ public interface MasterMapper {
             @Mapping(target = "garagePlace", ignore = true)
     })
     OrderDto orderToOrderDto(Order order);
-
 }

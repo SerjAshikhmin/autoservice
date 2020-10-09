@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -23,23 +22,20 @@ public class OrderController {
     @Autowired
     private IOrderService orderService;
     @Autowired
-    MasterMapper masterMapper;
+    private MasterMapper masterMapper;
     @Autowired
-    OrderMapper orderMapper;
+    private OrderMapper orderMapper;
 
     @GetMapping("")
-    public ResponseEntity<List<OrderDto>> onGetAllOrders() {
-        final List<OrderDto> orders = new ArrayList<>();
-        orderService.getAllOrders().forEach(order -> {
-            orders.add(orderMapper.orderToOrderDto(order));
-        });
+    public ResponseEntity<List<OrderDto>> getAllOrders() {
+        final List<OrderDto> orders = orderMapper.orderListToOrderDtoList(orderService.getAllOrders());
         return orders != null &&  !orders.isEmpty()
                 ? new ResponseEntity<>(orders, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderDto> onFindOrderById(@PathVariable("id") int id) {
+    public ResponseEntity<OrderDto> findOrderById(@PathVariable("id") int id) {
         final OrderDto order = orderMapper.orderToOrderDto(orderService.findOrderById(id));
         return order != null
                 ? new ResponseEntity<>(order, HttpStatus.OK)
@@ -48,88 +44,76 @@ public class OrderController {
 
     @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE,
                              produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> onAddOrder(@RequestBody OrderDto order) {
+    public ResponseEntity<?> addOrder(@RequestBody OrderDto order) {
         return orderService.addOrder(orderMapper.orderDtoToOrder(order)) == 1
                 ? new ResponseEntity<>(HttpStatus.CREATED)
                 : new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> onRemoveOrder(@PathVariable("id") int id) {
+    public ResponseEntity<?> removeOrder(@PathVariable("id") int id) {
         return orderService.removeOrder(id) == 1
                 ? new ResponseEntity<>(HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
     }
 
     @PutMapping("/cancel/{id}")
-    public ResponseEntity<?> onCancelOrder(@PathVariable("id") int id) {
+    public ResponseEntity<?> cancelOrder(@PathVariable("id") int id) {
         return orderService.cancelOrder(id) == 1
                 ? new ResponseEntity<>(HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
     }
 
     @PutMapping("/close/{id}")
-    public ResponseEntity<?> onCloseOrder(@PathVariable("id") int id) {
+    public ResponseEntity<?> closeOrder(@PathVariable("id") int id) {
         return orderService.closeOrder(id) == 1
                 ? new ResponseEntity<>(HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
     }
 
     @PutMapping("/shiftEndTimeOrders")
-    public ResponseEntity<?> onShiftEndTimeOrders(@RequestParam("hours") int hours, @RequestParam("minutes") int minutes) {
+    public ResponseEntity<?> shiftEndTimeOrders(@RequestParam("hours") int hours, @RequestParam("minutes") int minutes) {
         orderService.shiftEndTimeOrders(hours, minutes);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping("/sorted/{sortBy}")
-    public ResponseEntity<List<OrderDto>> onGetAllOrdersSorted(@PathVariable("sortBy") String sortBy) {
-        final List<OrderDto> orders = new ArrayList<>();
-        orderService.getAllOrdersSorted(sortBy).forEach(order -> {
-            orders.add(orderMapper.orderToOrderDto(order));
-        });
+    @GetMapping("/sorted")
+    public ResponseEntity<List<OrderDto>> getAllOrdersSorted(@RequestParam("sortBy") String sortBy) {
+        final List<OrderDto> orders = orderMapper.orderListToOrderDtoList(orderService.getAllOrdersSorted(sortBy));
         return orders != null && !orders.isEmpty()
                 ? new ResponseEntity<>(orders, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @GetMapping("/inProgress/{sortBy}")
-    public ResponseEntity<List<OrderDto>> onGetAllOrdersInProgress(@PathVariable("sortBy") String sortBy) {
-        final List<OrderDto> orders = new ArrayList<>();
-        orderService.getAllOrdersInProgress(sortBy).forEach(order -> {
-            orders.add(orderMapper.orderToOrderDto(order));
-        });
+    @GetMapping("/inProgress")
+    public ResponseEntity<List<OrderDto>> getAllOrdersInProgress(@RequestParam("sortBy") String sortBy) {
+        final List<OrderDto> orders = orderMapper.orderListToOrderDtoList(orderService.getAllOrdersInProgress(sortBy));
         return orders != null && !orders.isEmpty()
                 ? new ResponseEntity<>(orders, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/masters/{id}")
-    public ResponseEntity<List<MasterDto>> onGetMastersByOrder(@PathVariable("id") int id) {
-        final List<MasterDto> masters = new ArrayList<>();
-        orderService.getMastersByOrder(id).forEach(master -> {
-            masters.add(masterMapper.masterToMasterDto(master));
-        });
+    public ResponseEntity<List<MasterDto>> getMastersByOrder(@PathVariable("id") int id) {
+        final List<MasterDto> masters = masterMapper.masterListToMasterDtoList(orderService.getMastersByOrder(id));
         return masters != null && !masters.isEmpty()
                 ? new ResponseEntity<>(masters, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/ordersByPeriod")
-    public ResponseEntity<List<OrderDto>> onGetOrdersByPeriod (@RequestParam("startPeriod") String startPeriodStr,
+    public ResponseEntity<List<OrderDto>> getOrdersByPeriod (@RequestParam("startPeriod") String startPeriodStr,
                                                              @RequestParam("endPeriod") String endPeriodStr, @RequestParam("sortBy") String sortBy) {
-        final List<OrderDto> orders = new ArrayList<>();
         LocalDateTime startPeriod = LocalDateTime.parse(startPeriodStr);
         LocalDateTime endPeriod = LocalDateTime.parse(endPeriodStr);
-        orderService.getOrdersByPeriod(startPeriod, endPeriod, sortBy).forEach(order -> {
-            orders.add(orderMapper.orderToOrderDto(order));
-        });
+        final List<OrderDto> orders = orderMapper.orderListToOrderDtoList(orderService.getOrdersByPeriod(startPeriod, endPeriod, sortBy));
         return orders != null && !orders.isEmpty()
                 ? new ResponseEntity<>(orders, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/nearestDate")
-    public ResponseEntity<LocalDateTime> onGetNearestFreeDate() {
+    public ResponseEntity<LocalDateTime> getNearestFreeDate() {
         LocalDateTime nearestFreeDate = orderService.getNearestFreeDate();
         return nearestFreeDate != null
                 ? new ResponseEntity<>(nearestFreeDate, HttpStatus.OK)

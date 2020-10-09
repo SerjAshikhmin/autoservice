@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -20,62 +19,56 @@ public class GarageController {
     @Autowired
     private IGarageService garageService;
     @Autowired
-    GarageMapper garageMapper;
+    private GarageMapper garageMapper;
     @Autowired
-    GaragePlaceMapper garagePlaceMapper;
+    private GaragePlaceMapper garagePlaceMapper;
 
     @GetMapping("")
-    public ResponseEntity<List<GarageDto>> onGetAllGarages() {
-        final List<GarageDto> garages = new ArrayList<>();
-        garageService.getAllGarages().forEach(garage -> {
-            garages.add(garageMapper.garageToGarageDto(garage));
-        });
+    public ResponseEntity<List<GarageDto>> getAllGarages() {
+        final List<GarageDto> garages = garageMapper.garageListToGarageDtoList(garageService.getAllGarages());
         return garages != null && !garages.isEmpty()
                 ? new ResponseEntity<>(garages, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @PostMapping("")
-    public ResponseEntity<?> onAddGarage(@RequestBody GarageDto garage) {
+    public ResponseEntity<?> addGarage(@RequestBody GarageDto garage) {
         return garageService.addGarage(garageMapper.garageDtoToGarage(garage)) == 1
                 ? new ResponseEntity<>(HttpStatus.CREATED)
                 : new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> onRemoveGarage(@PathVariable("id") int id) {
+    public ResponseEntity<?> removeGarage(@PathVariable("id") int id) {
         return garageService.removeGarage(id) == 1
                 ? new ResponseEntity<>(HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
     }
 
     @PostMapping("/garagePlace")
-    public ResponseEntity<?> onAddGaragePlace(@RequestBody GaragePlaceDto garagePlace) {
+    public ResponseEntity<?> addGaragePlace(@RequestBody GaragePlaceDto garagePlace) {
         return garageService.addGaragePlace(garagePlaceMapper.garagePlaceDtoToGaragePlace(garagePlace)) == 1
                 ? new ResponseEntity<>(HttpStatus.CREATED)
                 : new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @DeleteMapping("/{garageId}/{garagePlaceId}")
-    public ResponseEntity<?> onRemoveGaragePlace(@PathVariable("garageId") int garageId, @PathVariable("garagePlaceId") int garagePlaceId) {
+    public ResponseEntity<?> removeGaragePlace(@PathVariable("garageId") int garageId, @PathVariable("garagePlaceId") int garagePlaceId) {
         return garageService.removeGaragePlace(garageId, garagePlaceId) == 1
                 ? new ResponseEntity<>(HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
     }
 
     @GetMapping("/freePlaces")
-    public ResponseEntity<List<GaragePlaceDto>> onGetAllFreePlaces() {
-        final List<GaragePlaceDto> garagePlaces = new ArrayList<>();
-        garageService.getAllFreePlaces().forEach(garagePlace -> {
-            garagePlaces.add(garagePlaceMapper.garagePlaceToGaragePlaceDto(garagePlace));
-        });
+    public ResponseEntity<List<GaragePlaceDto>> getAllFreePlaces() {
+        final List<GaragePlaceDto> garagePlaces = garagePlaceMapper.garagePlaceListToGaragePlaceDtoList(garageService.getAllFreePlaces());
         return garagePlaces != null && !garagePlaces.isEmpty()
                 ? new ResponseEntity<>(garagePlaces, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/freePlacesCountInFuture")
-    public ResponseEntity<Integer> onGetFreePlacesCountInFuture() {
+    public ResponseEntity<Integer> getFreePlacesCountInFuture() {
         return new ResponseEntity<>(garageService.getFreePlacesCountInFuture(), HttpStatus.OK);
     }
 

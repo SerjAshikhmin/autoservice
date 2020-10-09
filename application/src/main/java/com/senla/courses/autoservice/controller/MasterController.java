@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -20,56 +19,50 @@ public class MasterController {
     @Autowired
     private IMasterService masterService;
     @Autowired
-    MasterMapper mapper;
+    private MasterMapper mapper;
     @Autowired
-    OrderMapper orderMapper;
+    private OrderMapper orderMapper;
 
     @GetMapping("")
-    public ResponseEntity<List<MasterDto>> onGetAllMasters() {
-        final List<MasterDto> masters = new ArrayList<>();
-        masterService.getAllMasters().forEach(master -> {
-            masters.add(mapper.masterToMasterDto(master));
-        });
+    public ResponseEntity<List<MasterDto>> getAllMasters() {
+        final List<MasterDto> masters = mapper.masterListToMasterDtoList(masterService.getAllMasters());
         return masters != null &&  !masters.isEmpty()
                 ? new ResponseEntity<>(masters, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MasterDto> onFindMasterById(@PathVariable(name = "id") int id) {
+    public ResponseEntity<MasterDto> findMasterById(@PathVariable(name = "id") int id) {
         final MasterDto master = mapper.masterToMasterDto(masterService.findMasterById(id));
         return master != null
                 ? new ResponseEntity<>(master, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @GetMapping("/sorted/{sortBy}")
-    public ResponseEntity<List<MasterDto>> onGetAllMastersSorted(@PathVariable(name = "sortBy") String sortBy) {
-        final List<MasterDto> masters = new ArrayList<>();
-        masterService.getAllMastersSorted(sortBy).forEach(master -> {
-            masters.add(mapper.masterToMasterDto(master));
-        });
+    @GetMapping("/sorted")
+    public ResponseEntity<List<MasterDto>> getAllMastersSorted(@RequestParam("sortBy") String sortBy) {
+        final List<MasterDto> masters = mapper.masterListToMasterDtoList(masterService.getAllMastersSorted(sortBy));
         return masters != null && !masters.isEmpty()
                 ? new ResponseEntity<>(masters, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @PostMapping("")
-    public ResponseEntity<?> masters(@RequestBody MasterDto master) {
+    public ResponseEntity<?> addMaster(@RequestBody MasterDto master) {
         return masterService.addMaster(mapper.masterDtoToMaster(master)) == 1
                 ? new ResponseEntity<>(HttpStatus.CREATED)
                 : new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @PutMapping("")
-    public ResponseEntity<?> onUpdateMaster(@RequestBody MasterDto master) {
+    public ResponseEntity<?> updateMaster(@RequestBody MasterDto master) {
         return masterService.updateMaster(mapper.masterDtoToMaster(master)) == 1
                 ? new ResponseEntity<>(HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
     }
 
     @DeleteMapping("/{name}")
-    public ResponseEntity<?> onRemoveMaster(@PathVariable("name") String name) {
+    public ResponseEntity<?> removeMaster(@PathVariable("name") String name) {
         return masterService.removeMaster(name) == 1
                 ? new ResponseEntity<>(HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
