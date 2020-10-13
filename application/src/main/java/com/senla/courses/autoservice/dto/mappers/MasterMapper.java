@@ -9,10 +9,8 @@ import com.senla.courses.autoservice.model.Order;
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
 
 import java.util.List;
-
 
 @Mapper(componentModel="spring")
 public interface MasterMapper {
@@ -27,9 +25,7 @@ public interface MasterMapper {
     @Mapping(target = "garagePlaces", ignore = true)
     GarageDto garageToGarageDto(Garage garage);
 
-    @Mappings({
-            @Mapping(target = "masters", ignore = true),
-            @Mapping(target = "garagePlace", ignore = true)
-    })
+    @Mapping(target = "masters", ignore = true)
+    @Mapping(target = "garagePlace", ignore = true)
     OrderDto orderToOrderDto(Order order);
 }

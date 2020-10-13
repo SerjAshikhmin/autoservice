@@ -5,9 +5,14 @@ import com.lib.utils.exceptions.WrongFileFormatException;
 import com.senla.courses.autoservice.dao.interfaces.IMasterDao;
 import com.senla.courses.autoservice.dao.interfaces.IOrderDao;
 import com.senla.courses.autoservice.dao.jpadao.DbJpaConnector;
-import com.senla.courses.autoservice.exceptions.MasterNotFoundException;
+import com.senla.courses.autoservice.dto.MasterDto;
+import com.senla.courses.autoservice.dto.OrderDto;
+import com.senla.courses.autoservice.dto.mappers.MasterMapper;
+import com.senla.courses.autoservice.dto.mappers.OrderMapper;
+import com.senla.courses.autoservice.exceptions.masterexceptions.MasterAddingException;
+import com.senla.courses.autoservice.exceptions.masterexceptions.MasterModifyingException;
+import com.senla.courses.autoservice.exceptions.masterexceptions.MasterNotFoundException;
 import com.senla.courses.autoservice.model.Master;
-import com.senla.courses.autoservice.model.Order;
 import com.senla.courses.autoservice.service.comparators.master.MasterByBusyComparator;
 import com.senla.courses.autoservice.service.comparators.master.MasterByNameComparator;
 import com.senla.courses.autoservice.service.interfaces.IMasterService;
@@ -16,7 +21,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityTransaction;
 import java.io.*;
@@ -37,79 +41,88 @@ public class MasterService implements IMasterService {
     private IOrderDao orderDao;
     @Autowired
     DbJpaConnector dbJpaConnector;
+    @Autowired
+    private MasterMapper mapper;
+    @Autowired
+    private OrderMapper orderMapper;
 
     @Override
     //@Transactional
-    public int addMaster(Master master) {
+    public void addMaster(MasterDto master) throws MasterAddingException {
         EntityTransaction transaction = dbJpaConnector.getTransaction();
         try {
             transaction.begin();
-            masterDao.addMaster(master);
+            masterDao.addMaster(mapper.masterDtoToMaster(master));
             transaction.commit();
-            return 1;
         } catch (Exception e) {
             transaction.rollback();
             log.error(e.getMessage());
-            return 0;
+            throw new MasterAddingException(e.getMessage());
         } finally {
             dbJpaConnector.closeSession();
         }
     }
 
     @Override
-    public int removeMaster(String name) {
+    public void removeMaster(String name) throws MasterModifyingException {
         EntityTransaction transaction = null;
         try {
-            Master master = findMasterByName(name);
-            if (master == null) {
-                log.error("Мастера с указанным именем не существует");
-                return 0;
-            }
+            Master master = mapper.masterDtoToMaster(findMasterByName(name));
             transaction = dbJpaConnector.getTransaction();
             transaction.begin();
             masterDao.removeMaster(master);
             transaction.commit();
-            return 1;
         } catch (Exception e) {
             transaction.rollback();
             log.error(e.getMessage());
-            return 0;
+            throw new MasterModifyingException("Error deleting master");
         } finally {
             dbJpaConnector.closeSession();
         }
     }
 
     @Override
-    public int updateMaster(Master master) {
+    public void updateMaster(MasterDto master) throws MasterModifyingException {
         EntityTransaction transaction = dbJpaConnector.getTransaction();
         try {
             transaction.begin();
-            masterDao.updateMaster(master);
+            masterDao.updateMaster(mapper.masterDtoToMaster(master));
             transaction.commit();
-            return 1;
         } catch (Exception e) {
             transaction.rollback();
             log.error(e.getMessage());
-            return 0;
+            throw new MasterModifyingException("Error updating the master");
         } finally {
             dbJpaConnector.closeSession();
         }
     }
 
-    @Override
-    public List<Master> getAllMasters() {
+    private List<Master> getAllMasters() throws MasterNotFoundException {
         try {
-            return masterDao.getAllMasters();
+            List<Master> masters = masterDao.getAllMasters();
+            if (masters == null || masters.isEmpty()) {
+                throw new MasterNotFoundException("Masters not found");
+            }
+            return masters;
         } catch (Exception e) {
             log.error(e.getMessage());
-        } return null;
+            throw new MasterNotFoundException(e.getMessage());
+        }
     }
 
     @Override
-    public List<Master> getAllMastersSorted(String sortBy) {
+    public List<MasterDto> getAllDtoMasters() throws MasterNotFoundException {
+        return mapper.masterListToMasterDtoList(getAllMasters());
+    }
+
+    @Override
+    public List<MasterDto> getAllMastersSorted(String sortBy) throws MasterNotFoundException {
         List<Master> allMastersSorted = new ArrayList<>();
         try {
             allMastersSorted.addAll(masterDao.getAllMasters());
+            if (allMastersSorted == null || allMastersSorted.isEmpty()) {
+                throw new MasterNotFoundException("Masters not found");
+            }
         } catch (Exception e) {
             log.error(e.getMessage());
         }
@@ -117,15 +130,16 @@ public class MasterService implements IMasterService {
         if (masterComparator != null) {
             allMastersSorted.sort(masterComparator);
         }
-        return allMastersSorted;
+        return mapper.masterListToMasterDtoList(allMastersSorted);
     }
 
     @Override
-    public List<Master> getAllFreeMasters() {
+    public List<MasterDto> getAllFreeMasters() throws MasterNotFoundException {
         try {
-            return getAllMasters().stream()
+            List<Master> masters =  getAllMasters().stream()
                     .filter(master -> !master.isBusy())
                     .collect(Collectors.toList());
+            return mapper.masterListToMasterDtoList(masters);
         } catch (Exception e) {
             log.error(e.getMessage());
             return null;
@@ -133,39 +147,37 @@ public class MasterService implements IMasterService {
     }
 
     @Override
-    public Order getCurrentOrder(String name) {
+    public OrderDto getCurrentOrder(String name) throws MasterNotFoundException {
         try {
-            return masterDao.getCurrentOrder(findMasterByName(name));
-        } catch (MasterNotFoundException e) {
-            log.error("Мастер не найден");
+            return orderMapper.orderToOrderDto(masterDao.getCurrentOrder(mapper.masterDtoToMaster(findMasterByName(name))));
         } catch (Exception e) {
             log.error(e.getMessage());
+            throw new MasterNotFoundException(e.getMessage());
         }
-        return null;
     }
 
     @Override
-    public Master findMasterByName(String name) {
+    public MasterDto findMasterByName(String name) throws MasterNotFoundException {
         for (Master master : getAllMasters()) {
             if (master.getName().equals(name)) {
-                return master;
+                return mapper.masterToMasterDto(master);
             }
         }
-        return null;
+        throw new MasterNotFoundException("Master not found");
     }
 
     @Override
-    public Master findMasterById(int id) {
+    public MasterDto findMasterById(int id) throws MasterNotFoundException {
         try {
-            return masterDao.getMasterById(id);
+            return mapper.masterToMasterDto(masterDao.getMasterById(id));
         } catch (Exception e) {
             log.error(e.getMessage());
-            return null;
+            throw new MasterNotFoundException(e.getMessage());
         }
     }
 
     @Override
-    public int importMaster(String fileName) {
+    public void importMaster(String fileName) {
         try {
             List<String> masterDataList = CsvUtil.importCsvFile(fileName);
             if (masterDataList == null) {
@@ -176,9 +188,8 @@ public class MasterService implements IMasterService {
 
             if (masterDao.getMasterById(importMaster.getId()) != null) {
                 masterDao.updateMaster(importMaster);
-                return 1;
             } else {
-                return masterDao.addMaster(importMaster);
+                masterDao.addMaster(importMaster);
             }
         } catch (WrongFileFormatException e) {
             log.error("Неверный формат файла");
@@ -187,7 +198,6 @@ public class MasterService implements IMasterService {
         } catch (Exception e) {
             log.error(e.getMessage());
         }
-        return 0;
     }
 
     @Override
@@ -219,7 +229,7 @@ public class MasterService implements IMasterService {
     }
 
     @Override
-    public void saveState() {
+    public void saveState() throws MasterNotFoundException {
         SerializeUtil.saveState(getAllMasters(), "SerialsMasters.out");
     }
 

@@ -1,6 +1,6 @@
 package com.senla.courses.autoservice.dao.interfaces;
 
-import com.senla.courses.autoservice.exceptions.MasterNotFoundException;
+import com.senla.courses.autoservice.exceptions.masterexceptions.MasterNotFoundException;
 import com.senla.courses.autoservice.model.Master;
 import com.senla.courses.autoservice.model.Order;
 import org.springframework.stereotype.Repository;

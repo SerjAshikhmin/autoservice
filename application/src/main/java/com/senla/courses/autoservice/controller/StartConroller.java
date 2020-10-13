@@ -1,5 +1,6 @@
 package com.senla.courses.autoservice.controller;
 
+import com.senla.courses.autoservice.dto.MasterDto;
 import com.senla.courses.autoservice.model.Garage;
 import com.senla.courses.autoservice.model.GaragePlace;
 import com.senla.courses.autoservice.model.Master;
@@ -38,10 +39,10 @@ public class StartConroller {
         return modelAndView;
     }
 
-    private void fillInTestData() {
-        masterService.addMaster(new Master(1, "Evgeniy", 3));
-        masterService.addMaster(new Master(2, "Alex", 2));
-        masterService.addMaster(new Master(3, "Ivan", 5));
+    /*private void fillInTestData() {
+        masterService.addMaster(new MasterDto(1, "Evgeniy", 3));
+        masterService.addMaster(new MasterDto(2, "Alex", 2));
+        masterService.addMaster(new MasterDto(3, "Ivan", 5));
 
         garageService.addGarage(new Garage(1, "Orel-Moskovskaya-22", new ArrayList<>()));
         garageService.addGarage(new Garage(2, "Orel-Naugorskaya-20", new ArrayList<>()));
@@ -69,5 +70,5 @@ public class StartConroller {
                 LocalDateTime.of(2020, Month.MAY, 31, 11, 0),
                 LocalDateTime.of(2020, Month.MAY, 31, 12, 0),
                 "Diagnostics", 500, garageService.findGaragePlaceById(1, 3), masters, OrderStatus.ACCEPTED));
-    }
+    }*/
 }

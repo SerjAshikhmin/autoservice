@@ -6,7 +6,16 @@ import com.senla.courses.autoservice.dao.interfaces.IGaragePlaceDao;
 import com.senla.courses.autoservice.dao.interfaces.IMasterDao;
 import com.senla.courses.autoservice.dao.interfaces.IOrderDao;
 import com.senla.courses.autoservice.dao.jpadao.DbJpaConnector;
-import com.senla.courses.autoservice.exceptions.OrderNotFoundException;
+import com.senla.courses.autoservice.dto.MasterDto;
+import com.senla.courses.autoservice.dto.OrderDto;
+import com.senla.courses.autoservice.dto.mappers.GaragePlaceMapper;
+import com.senla.courses.autoservice.dto.mappers.MasterMapper;
+import com.senla.courses.autoservice.dto.mappers.OrderMapper;
+import com.senla.courses.autoservice.exceptions.masterexceptions.MasterAddingException;
+import com.senla.courses.autoservice.exceptions.masterexceptions.MasterNotFoundException;
+import com.senla.courses.autoservice.exceptions.orderexceptions.OrderAddingException;
+import com.senla.courses.autoservice.exceptions.orderexceptions.OrderModifyingException;
+import com.senla.courses.autoservice.exceptions.orderexceptions.OrderNotFoundException;
 import com.senla.courses.autoservice.model.GaragePlace;
 import com.senla.courses.autoservice.model.Master;
 import com.senla.courses.autoservice.model.Order;
@@ -23,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceException;
@@ -51,6 +59,12 @@ public class OrderService implements IOrderService {
     private IGarageService garageService;
     @Autowired
     DbJpaConnector dbJpaConnector;
+    @Autowired
+    private MasterMapper masterMapper;
+    @Autowired
+    private OrderMapper orderMapper;
+    @Autowired
+    private GaragePlaceMapper garagePlaceMapper;
     @Value("${shiftEndTimeOrdersOption}")
     private boolean shiftEndTimeOrdersOption;
     @Value("${removeOrderOption}")
@@ -58,40 +72,38 @@ public class OrderService implements IOrderService {
 
     @Override
     //@Transactional
-    public int addOrder(Order order) {
-        List<Master> masters = new ArrayList<>();
-        Master master = order.getMasters().get(0);
+    public void addOrder(OrderDto order) throws MasterNotFoundException, OrderAddingException {
+        List<MasterDto> masters = new ArrayList<>();
+        MasterDto master = order.getMasters().get(0);
         if (master == null) {
             log.error(String.format("Не найден мастер для заказа №%d", order.getId()));
-            return 0;
+            throw new MasterNotFoundException("Master not found");
         }
         master.setBusy(true);
         order.getGaragePlace().setBusy(true);
-        master.setOrder(order);
         EntityTransaction transaction = dbJpaConnector.getTransaction();
         try {
             transaction.begin();
-            orderDao.addOrder(order);
-            masterDao.updateMaster(master);
-            garagePlaceDao.updateGaragePlace(order.getGaragePlace());
+            orderDao.addOrder(orderMapper.orderDtoToOrder(order));
+            masterDao.updateMaster(masterMapper.masterDtoToMaster(master));
+            garagePlaceDao.updateGaragePlace(garagePlaceMapper.garagePlaceDtoToGaragePlace(order.getGaragePlace()));
             transaction.commit();
-            return 1;
         } catch (Exception ex) {
             transaction.rollback();
             log.error(ex.getMessage());
+            throw new MasterAddingException(ex.getMessage());
         } finally {
             dbJpaConnector.closeSession();
         }
-        return 0;
     }
 
     @Override
-    public int removeOrder(int id) {
+    public void removeOrder(int id) throws OrderNotFoundException, OrderModifyingException {
         if (removeOrderOption) {
-            Order order = findOrderById(id);
+            Order order = orderMapper.orderDtoToOrder(findOrderById(id));
             if (order == null) {
-                log.error("Заказ с указанным номером не существует");
-                return 0;
+                log.error("Order not found");
+                throw new OrderNotFoundException("Order not found");
             }
             GaragePlace garagePlace = order.getGaragePlace();
             garagePlace.setBusy(false);
@@ -110,22 +122,21 @@ public class OrderService implements IOrderService {
                 garagePlaceDao.updateGaragePlace(order.getGaragePlace());
                 orderDao.removeOrder(order);
                 transaction.commit();
-                return 1;
             } catch (PersistenceException ex) {
                 transaction.rollback();
                 log.error(ex.getMessage());
+                throw new OrderModifyingException(ex.getMessage());
             } finally {
                 dbJpaConnector.closeSession();
             }
         } else {
             log.warn("Возможность удаления заказов отключена");
         }
-        return 0;
     }
 
     @Override
-    public int cancelOrder(int id) {
-        Order order = findOrderById(id);
+    public void cancelOrder(int id) throws OrderNotFoundException, OrderModifyingException {
+        Order order = orderMapper.orderDtoToOrder(findOrderById(id));
         if (order != null) {
             order.getGaragePlace().setBusy(false);
             order.getMasters().stream()
@@ -137,22 +148,22 @@ public class OrderService implements IOrderService {
                 orderDao.updateOrder(order);
                 transaction.commit();
                 log.info(String.format("Заказ №%d отменен", id));
-                return 1;
             } catch (Exception ex) {
                 transaction.rollback();
                 log.error(ex.getMessage());
+                throw new OrderModifyingException(ex.getMessage());
             } finally {
                 dbJpaConnector.closeSession();
             }
         } else {
-            log.error("Заказ не найден");
+            log.error("Order not found");
+            throw new OrderNotFoundException("Order not found");
         }
-        return 0;
     }
 
     @Override
-    public int closeOrder(int id) {
-        Order order = findOrderById(id);
+    public void closeOrder(int id) throws OrderNotFoundException, OrderModifyingException {
+        Order order = orderMapper.orderDtoToOrder(findOrderById(id));
         if (order != null) {
             order.getGaragePlace().setBusy(false);
             order.getMasters().stream()
@@ -166,24 +177,26 @@ public class OrderService implements IOrderService {
                 orderDao.updateOrder(order);
                 transaction.commit();
                 log.info(String.format("Заказ №%d закрыт", id));
-                return 1;
             } catch (Exception ex) {
                 transaction.rollback();
                 log.error(ex.getMessage());
+                throw new OrderModifyingException(ex.getMessage());
             } finally {
                 dbJpaConnector.closeSession();
             }
         } else {
-            log.error("При закрытии заказа произошла ошибка");
+            log.error("Order not found");
+            throw new OrderNotFoundException("Order not found");
         }
-        return 0;
     }
 
-    @Override
-    public List<Order> getAllOrders() {
+    private List<Order> getAllOrders() throws OrderNotFoundException {
         List<Order> orders = null;
         try {
             orders = orderDao.getAllOrders();
+            if (orders == null ||  orders.isEmpty()) {
+                throw new OrderNotFoundException("Orders not found");
+            }
         } catch (Exception ex) {
             log.error(ex.getMessage());
         }
@@ -191,18 +204,23 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public List<Order> getAllOrdersSorted(String sortBy) {
+    public List<OrderDto> getAllDtoOrders() throws OrderNotFoundException {
+        return orderMapper.orderListToOrderDtoList(getAllOrders());
+    }
+
+    @Override
+    public List<OrderDto> getAllOrdersSorted(String sortBy) throws OrderNotFoundException {
         List<Order> allOrdersSorted = new ArrayList<>();
         allOrdersSorted.addAll(getAllOrders());
         Comparator orderComparator = getOrderComparator(sortBy);
         if (orderComparator != null) {
             allOrdersSorted.sort(orderComparator);
         }
-        return allOrdersSorted;
+        return orderMapper.orderListToOrderDtoList(allOrdersSorted);
     }
 
     @Override
-    public List<Order> getAllOrdersInProgress(String sortBy) {
+    public List<OrderDto> getAllOrdersInProgress(String sortBy) throws OrderNotFoundException {
         Comparator orderComparator = getOrderComparator(sortBy);
         List<Order> orders = null;
         try {
@@ -216,7 +234,7 @@ public class OrderService implements IOrderService {
         } catch (Exception ex) {
             log.error(ex.getMessage());
         }
-        return orders;
+        return orderMapper.orderListToOrderDtoList(orders);
     }
 
     @Override
@@ -229,10 +247,10 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public List<Master> getMastersByOrder (int id) {
-        Order order = findOrderById(id);
+    public List<MasterDto> getMastersByOrder (int id) {
+        Order order = orderMapper.orderDtoToOrder(findOrderById(id));
         try {
-            return orderDao.getMastersByOrder(order);
+            return masterMapper.masterListToMasterDtoList(orderDao.getMastersByOrder(order));
         } catch (OrderNotFoundException e) {
             log.error("Неправильный номер заказа");
             return null;
@@ -240,7 +258,7 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public List<Order> getOrdersByPeriod (LocalDateTime startPeriod, LocalDateTime endPeriod, String sortBy) {
+    public List<OrderDto> getOrdersByPeriod (LocalDateTime startPeriod, LocalDateTime endPeriod, String sortBy) throws OrderNotFoundException {
         List<Order> ordersByPeriod = new ArrayList<>();
         getAllOrders().stream()
                 .filter(order -> startPeriod.compareTo(order.getEndDate()) <= -1 && endPeriod.compareTo(order.getEndDate()) >= 1)
@@ -250,26 +268,25 @@ public class OrderService implements IOrderService {
         if (orderComparator != null) {
             ordersByPeriod.sort(orderComparator);
         }
-        return ordersByPeriod;
+        return orderMapper.orderListToOrderDtoList(ordersByPeriod);
     }
 
     @Override
-    public int updateOrderTime(Order order, LocalDateTime newStartTime, LocalDateTime newEndTime) {
+    public void updateOrderTime(OrderDto order, LocalDateTime newStartTime, LocalDateTime newEndTime) throws OrderModifyingException {
         EntityTransaction transaction = dbJpaConnector.getTransaction();
         order.setStartDate(newStartTime);
         order.setEndDate(newEndTime);
         try {
             transaction.begin();
-            orderDao.updateOrder(order);
+            orderDao.updateOrder(orderMapper.orderDtoToOrder(order));
             transaction.commit();
-            return 1;
         } catch (Exception ex) {
             transaction.rollback();
             log.error(ex.getMessage());
+            throw new OrderModifyingException(ex.getMessage());
         } finally {
             dbJpaConnector.closeSession();
         }
-        return 0;
     }
 
     @Override
@@ -277,7 +294,7 @@ public class OrderService implements IOrderService {
         if (shiftEndTimeOrdersOption) {
             List<Order> allOrders = getAllOrders();
             allOrders.stream().forEach(order -> {
-                updateOrderTime(order, order.getStartDate(), order.getEndDate().plusHours(hours).plusMinutes(minutes));
+                updateOrderTime(orderMapper.orderToOrderDto(order), order.getStartDate(), order.getEndDate().plusHours(hours).plusMinutes(minutes));
             });
         } else {
             log.warn("Возможность смещать время выполнения заказов отключена");
@@ -285,28 +302,28 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public Order findOrderById(int id) {
+    public OrderDto findOrderById(int id) throws OrderNotFoundException {
         for (Order order : getAllOrders()) {
             if (order.getId() == id) {
-                return order;
+                return orderMapper.orderToOrderDto(order);
             }
         }
-        return null;
+        throw new OrderNotFoundException("Order not found");
     }
 
     @Override
-    public int importOrder(String fileName) {
+    public void importOrder(String fileName) {
         try {
             List<String> orderDataList = CsvUtil.importCsvFile(fileName);
             if (orderDataList == null) {
                 throw new FileNotFoundException();
             }
             Order importOrder;
-            GaragePlace importGaragePlace = garageService.findGaragePlaceById(Integer.parseInt(orderDataList.get(7)), Integer.parseInt(orderDataList.get(8)));
+            GaragePlace importGaragePlace = garagePlaceMapper.garagePlaceDtoToGaragePlace(garageService.findGaragePlaceById(Integer.parseInt(orderDataList.get(7)), Integer.parseInt(orderDataList.get(8))));
             List<Master> importMasters = new ArrayList<>();
 
             for (int i = 9; i < orderDataList.size(); i++) {
-                importMasters.add(masterService.findMasterById(Integer.parseInt(orderDataList.get(i))));
+                importMasters.add(masterMapper.masterDtoToMaster(masterService.findMasterById(Integer.parseInt(orderDataList.get(i)))));
             }
             importOrder = new Order(Integer.parseInt(orderDataList.get(0)), LocalDateTime.parse(orderDataList.get(1)),
                     LocalDateTime.parse(orderDataList.get(2)), LocalDateTime.parse(orderDataList.get(3)), orderDataList.get(4),
@@ -314,25 +331,21 @@ public class OrderService implements IOrderService {
 
             if (orderDao.getOrderById(importOrder.getId()) != null) {
                 orderDao.updateOrder(importOrder);
-                return 1;
             } else {
-                return orderDao.addOrder(importOrder);
+                orderDao.addOrder(importOrder);
             }
         } catch (WrongFileFormatException e) {
             log.error("Неверный формат файла");
-            return 0;
         } catch (FileNotFoundException e) {
             log.error("Файл не найден");
-            return 0;
         } catch (Exception e) {
             log.error(e.getMessage());
-            return 0;
         }
     }
 
     @Override
     public boolean exportOrder(int id, String fileName) {
-        Order orderToExport = findOrderById(id);
+        Order orderToExport = orderMapper.orderDtoToOrder(findOrderById(id));
         try {
             if (orderToExport != null) {
                 return CsvUtil.exportCsvFile(toList(orderToExport), fileName);

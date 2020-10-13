@@ -2,8 +2,6 @@ package com.senla.courses.autoservice.controller;
 
 import com.senla.courses.autoservice.dto.GarageDto;
 import com.senla.courses.autoservice.dto.GaragePlaceDto;
-import com.senla.courses.autoservice.dto.mappers.GarageMapper;
-import com.senla.courses.autoservice.dto.mappers.GaragePlaceMapper;
 import com.senla.courses.autoservice.service.interfaces.IGarageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,53 +16,41 @@ public class GarageController {
 
     @Autowired
     private IGarageService garageService;
-    @Autowired
-    private GarageMapper garageMapper;
-    @Autowired
-    private GaragePlaceMapper garagePlaceMapper;
 
     @GetMapping("")
     public ResponseEntity<List<GarageDto>> getAllGarages() {
-        final List<GarageDto> garages = garageMapper.garageListToGarageDtoList(garageService.getAllGarages());
-        return garages != null && !garages.isEmpty()
-                ? new ResponseEntity<>(garages, HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        final List<GarageDto> garages = garageService.getAllGarages();
+        return ResponseEntity.ok(garages);
     }
 
     @PostMapping("")
     public ResponseEntity<?> addGarage(@RequestBody GarageDto garage) {
-        return garageService.addGarage(garageMapper.garageDtoToGarage(garage)) == 1
-                ? new ResponseEntity<>(HttpStatus.CREATED)
-                : new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        garageService.addGarage(garage);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> removeGarage(@PathVariable("id") int id) {
-        return garageService.removeGarage(id) == 1
-                ? new ResponseEntity<>(HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
+        garageService.removeGarage(id);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PostMapping("/garagePlace")
+    @PostMapping("/garagePlaces")
     public ResponseEntity<?> addGaragePlace(@RequestBody GaragePlaceDto garagePlace) {
-        return garageService.addGaragePlace(garagePlaceMapper.garagePlaceDtoToGaragePlace(garagePlace)) == 1
-                ? new ResponseEntity<>(HttpStatus.CREATED)
-                : new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        garageService.addGaragePlace(garagePlace);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @DeleteMapping("/{garageId}/{garagePlaceId}")
+    @DeleteMapping("/{garageId}/garagePlaces/{garagePlaceId}")
     public ResponseEntity<?> removeGaragePlace(@PathVariable("garageId") int garageId, @PathVariable("garagePlaceId") int garagePlaceId) {
-        return garageService.removeGaragePlace(garageId, garagePlaceId) == 1
-                ? new ResponseEntity<>(HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
+        garageService.removeGaragePlace(garageId, garagePlaceId);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/freePlaces")
     public ResponseEntity<List<GaragePlaceDto>> getAllFreePlaces() {
-        final List<GaragePlaceDto> garagePlaces = garagePlaceMapper.garagePlaceListToGaragePlaceDtoList(garageService.getAllFreePlaces());
-        return garagePlaces != null && !garagePlaces.isEmpty()
-                ? new ResponseEntity<>(garagePlaces, HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        final List<GaragePlaceDto> garagePlaces = garageService.getAllFreePlaces();
+        return ResponseEntity.ok(garagePlaces);
     }
 
     @GetMapping("/freePlacesCountInFuture")
@@ -72,16 +58,16 @@ public class GarageController {
         return new ResponseEntity<>(garageService.getFreePlacesCountInFuture(), HttpStatus.OK);
     }
 
-    public int importGarage(String fileName) {
-        return garageService.importGarage(fileName);
+    public void importGarage(String fileName) {
+        garageService.importGarage(fileName);
     }
 
     public boolean exportGarage(int id, String fileName) {
         return garageService.exportGarage(id, fileName);
     }
 
-    public int importGaragePlace(String fileName) {
-        return garageService.importGaragePlace(fileName);
+    public void importGaragePlace(String fileName) {
+        garageService.importGaragePlace(fileName);
     }
 
     public boolean exportGaragePlace(int garageId, int garagePlaceId, String fileName) {

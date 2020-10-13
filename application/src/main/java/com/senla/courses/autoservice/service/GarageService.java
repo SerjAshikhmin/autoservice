@@ -5,6 +5,13 @@ import com.lib.utils.exceptions.WrongFileFormatException;
 import com.senla.courses.autoservice.dao.interfaces.IGarageDao;
 import com.senla.courses.autoservice.dao.interfaces.IGaragePlaceDao;
 import com.senla.courses.autoservice.dao.jpadao.DbJpaConnector;
+import com.senla.courses.autoservice.dto.GarageDto;
+import com.senla.courses.autoservice.dto.GaragePlaceDto;
+import com.senla.courses.autoservice.dto.mappers.GarageMapper;
+import com.senla.courses.autoservice.dto.mappers.GaragePlaceMapper;
+import com.senla.courses.autoservice.exceptions.garageexceptions.GarageAddingException;
+import com.senla.courses.autoservice.exceptions.garageexceptions.GarageNotFoundException;
+import com.senla.courses.autoservice.exceptions.garageexceptions.GarageRemovingException;
 import com.senla.courses.autoservice.model.Garage;
 import com.senla.courses.autoservice.model.GaragePlace;
 import com.senla.courses.autoservice.service.interfaces.IGarageService;
@@ -34,6 +41,10 @@ public class GarageService implements IGarageService {
     private IMasterService masterService;
     @Autowired
     DbJpaConnector dbJpaConnector;
+    @Autowired
+    private GarageMapper garageMapper;
+    @Autowired
+    private GaragePlaceMapper garagePlaceMapper;
     @Value("${addGaragePlaceOption}")
     private boolean addGaragePlaceOption;
     @Value("${removeGaragePlaceOption}")
@@ -41,31 +52,30 @@ public class GarageService implements IGarageService {
 
     @Override
     //@Transactional(transactionManager = "transactionManager")
-    public int addGarage(Garage garage) {
+    public void addGarage(GarageDto garage) throws GarageAddingException {
         EntityTransaction transaction = dbJpaConnector.getTransaction();
         try {
             transaction.begin();
-            garageDao.addGarage(garage);
+            garageDao.addGarage(garageMapper.garageDtoToGarage(garage));
             transaction.commit();
-            return 1;
         } catch (Exception e) {
             transaction.rollback();
             log.error(e.getMessage());
-            return 0;
+            throw new GarageAddingException(e.getMessage());
         } finally {
             dbJpaConnector.closeSession();
         }
     }
 
     @Override
-    public int removeGarage(int garageId) {
+    public void removeGarage(int garageId) throws GarageNotFoundException, GarageRemovingException {
         EntityTransaction transaction = null;
+        Garage garage = garageMapper.garageDtoToGarage(findGarageById(garageId));
+        if (garage == null) {
+            log.error("Garage not found");
+            throw new GarageNotFoundException("Garage not found");
+        }
         try {
-            Garage garage = findGarageById(garageId);
-            if (garage == null) {
-                log.error("Гараж с указанным номером не существует");
-                return 0;
-            }
             transaction = dbJpaConnector.getTransaction();
             transaction.begin();
             List<GaragePlace> garagePlaces = garage.getGaragePlaces();
@@ -74,78 +84,79 @@ public class GarageService implements IGarageService {
             }
             garageDao.removeGarage(garage);
             transaction.commit();
-            return 1;
         } catch (Exception e) {
             transaction.rollback();
             log.error(e.getMessage());
-            return 0;
+            throw new GarageRemovingException(e.getMessage());
         } finally {
             dbJpaConnector.closeSession();
         }
     }
 
     @Override
-    public List<Garage> getAllGarages() {
-        List<Garage> garages = null;
+    public List<GarageDto> getAllGarages() throws GarageNotFoundException {
+        List<GarageDto> garages = null;
         try {
-            garages = garageDao.getAllGarages();
+            garages = garageMapper.garageListToGarageDtoList(garageDao.getAllGarages());
+            if (garages == null || garages.isEmpty()) {
+                throw new GarageNotFoundException("Garages not found");
+            }
         } catch (Exception ex) {
             log.error(ex.getMessage());
+            throw new GarageNotFoundException(ex.getMessage());
         }
         return garages;
     }
 
     @Override
     //@Transactional(transactionManager = "transactionManager")
-    public int addGaragePlace(GaragePlace garagePlace) {
+    public void addGaragePlace(GaragePlaceDto garagePlace) throws GarageAddingException {
         if (addGaragePlaceOption) {
             EntityTransaction transaction = dbJpaConnector.getTransaction();
             try {
                 transaction.begin();
-                garagePlaceDao.addGaragePlace(garagePlace);
+                garagePlaceDao.addGaragePlace(garagePlaceMapper.garagePlaceDtoToGaragePlace(garagePlace));
                 transaction.commit();
-                return 1;
             } catch (Exception e) {
                 transaction.rollback();
                 log.error(e.getMessage());
+                throw new GarageAddingException(e.getMessage());
             } finally {
                 dbJpaConnector.closeSession();
             }
         } else {
             log.warn("Возможность добавления места в гараже отключена");
         }
-        return 0;
     }
 
     @Override
-    public int removeGaragePlace(int garageId, int garagePlaceId) {
+    public void removeGaragePlace(int garageId, int garagePlaceId) throws GarageNotFoundException, GarageRemovingException {
         if (removeGaragePlaceOption) {
             EntityTransaction transaction = null;
+            GaragePlace garagePlace = garagePlaceMapper.garagePlaceDtoToGaragePlace(findGaragePlaceById(garageId, garagePlaceId));
+            if (garagePlace == null) {
+                log.error("Garage place not found");
+                throw new GarageNotFoundException("Garage place not found");
+            }
             try {
-                GaragePlace garagePlace = findGaragePlaceById(garageId, garagePlaceId);
-                if (garagePlace == null) {
-                    log.error("Место в гараже с указанным номером не существует");
-                    return 0;
-                }
                 transaction = dbJpaConnector.getTransaction();
                 transaction.begin();
                 garagePlaceDao.removeGaragePlace(garagePlace);
                 transaction.commit();
-                return 1;
             } catch (Exception e) {
                 transaction.rollback();
                 log.error(e.getMessage());
+                throw  new GarageRemovingException(e.getMessage());
             } finally {
                 dbJpaConnector.closeSession();
             }
         } else {
             log.warn("Возможность удаления места в гараже отключена");
         }
-        return 0;
     }
 
     @Override
-    public List<GaragePlace> getAllFreePlaces() {
+    public List<GaragePlaceDto> getAllFreePlaces() {
         List<GaragePlace> freePlaces = new ArrayList<>();
         try {
             garageDao.getAllGarages().stream()
@@ -155,7 +166,7 @@ public class GarageService implements IGarageService {
         } catch (Exception ex) {
             log.error(ex.getMessage());
         }
-        return freePlaces;
+        return garagePlaceMapper.garagePlaceListToGaragePlaceDtoList(freePlaces);
     }
 
     @Override
@@ -164,29 +175,29 @@ public class GarageService implements IGarageService {
     }
 
     @Override
-    public GaragePlace findGaragePlaceById(int garageId, int garagePlaceId) {
+    public GaragePlaceDto findGaragePlaceById(int garageId, int garagePlaceId) {
         GaragePlace garagePlace = null;
         try {
             garagePlace = garagePlaceDao.getGaragePlaceById(garageId, garagePlaceId);
         } catch (Exception ex) {
             log.error(ex.getMessage());
         }
-        return garagePlace;
+        return garagePlaceMapper.garagePlaceToGaragePlaceDto(garagePlace);
     }
 
     @Override
-    public Garage findGarageById(int garageId) {
+    public GarageDto findGarageById(int garageId) {
         Garage garage = null;
         try {
             garage = garageDao.getGarageById(garageId);
         } catch (Exception ex) {
             log.error(ex.getMessage());
         }
-        return garage;
+        return garageMapper.garageToGarageDto(garage);
     }
 
     @Override
-    public int importGarage(String fileName) {
+    public void importGarage(String fileName) {
         Garage importGarage;
         try {
             List<String> garageDataList = CsvUtil.importCsvFile(fileName);
@@ -198,7 +209,8 @@ public class GarageService implements IGarageService {
             } else {
                 List<GaragePlace> importGaragePlaces = new ArrayList<>();
                 for (int i = 0; i < (garageDataList.size() - 2) / 5; i++) {
-                    GaragePlace importGaragePlace = new GaragePlace(Integer.parseInt(garageDataList.get(2 + i * 5)), findGarageById(Integer.parseInt(garageDataList.get(3 + i * 5))),
+                    GaragePlace importGaragePlace = new GaragePlace(Integer.parseInt(garageDataList.get(2 + i * 5)),
+                            garageMapper.garageDtoToGarage(findGarageById(Integer.parseInt(garageDataList.get(3 + i * 5)))),
                             garageDataList.get(4 + i * 5), Integer.parseInt(garageDataList.get(5 + i * 5)), Boolean.parseBoolean(garageDataList.get(6 + i * 5)));
                     importGaragePlaces.add(importGaragePlace);
                 }
@@ -207,9 +219,8 @@ public class GarageService implements IGarageService {
 
             if (findGarageById(importGarage.getId()) != null) {
                 garageDao.updateGarage(importGarage);
-                return 1;
             } else {
-                return garageDao.addGarage(importGarage);
+                garageDao.addGarage(importGarage);
             }
         } catch (WrongFileFormatException e) {
             log.error("Неверный формат файла");
@@ -218,15 +229,14 @@ public class GarageService implements IGarageService {
         } catch (Exception e) {
             log.error(e.getMessage());
         }
-        return 0;
     }
 
     @Override
     public boolean exportGarage(int id, String fileName) {
         try {
-            Garage garageToExport = findGarageById(id);
+            GarageDto garageToExport = findGarageById(id);
             if (garageToExport != null) {
-                return CsvUtil.exportCsvFile(garageToList(garageToExport), fileName);
+                return CsvUtil.exportCsvFile(garageToList(garageMapper.garageDtoToGarage(garageToExport)), fileName);
             } else {
                 log.error("Неверный № гаража");
             }
@@ -237,13 +247,13 @@ public class GarageService implements IGarageService {
     }
 
     @Override
-    public int importGaragePlace(String fileName) {
+    public void importGaragePlace(String fileName) {
         try {
             List<String> garagePlaceDataList = CsvUtil.importCsvFile(fileName);
             if (garagePlaceDataList == null) {
                 throw new FileNotFoundException();
             }
-            GaragePlace importGaragePlace = new GaragePlace(Integer.parseInt(garagePlaceDataList.get(0)), findGarageById(Integer.parseInt(garagePlaceDataList.get(1))),
+            GaragePlace importGaragePlace = new GaragePlace(Integer.parseInt(garagePlaceDataList.get(0)), garageMapper.garageDtoToGarage(findGarageById(Integer.parseInt(garagePlaceDataList.get(1)))),
                     garagePlaceDataList.get(2), Integer.parseInt(garagePlaceDataList.get(3)), Boolean.parseBoolean(garagePlaceDataList.get(4)));
 
             if (garagePlaceDao.getGaragePlaceById(importGaragePlace.getGarageId(), importGaragePlace.getId()) != null) {
@@ -251,7 +261,6 @@ public class GarageService implements IGarageService {
             } else {
                 garagePlaceDao.addGaragePlace(importGaragePlace);
             }
-            return 1;
         } catch (WrongFileFormatException e) {
             log.error("Неверный формат файла");
         } catch (FileNotFoundException e) {
@@ -259,13 +268,12 @@ public class GarageService implements IGarageService {
         } catch (Exception ex) {
             log.error(ex.getMessage());
         }
-        return 0;
     }
 
     @Override
     public boolean exportGaragePlace(int garageId, int garagePlaceId, String fileName) {
         try {
-            GaragePlace garagePlaceToExport = findGaragePlaceById(garageId, garagePlaceId);
+            GaragePlace garagePlaceToExport = garagePlaceMapper.garagePlaceDtoToGaragePlace(findGaragePlaceById(garageId, garagePlaceId));
             if (garagePlaceToExport != null) {
                 return CsvUtil.exportCsvFile(garagePlaceToList(garagePlaceToExport), fileName);
             } else {

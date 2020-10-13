@@ -3,10 +3,9 @@ package com.senla.courses.autoservice.dao;
 import com.senla.courses.autoservice.dao.interfaces.IOrderDao;
 import com.senla.courses.autoservice.dao.jpadao.AbstractJpaDao;
 import com.senla.courses.autoservice.dao.jpadao.DbJpaConnector;
-import com.senla.courses.autoservice.exceptions.OrderNotFoundException;
+import com.senla.courses.autoservice.exceptions.orderexceptions.OrderNotFoundException;
 import com.senla.courses.autoservice.model.Master;
 import com.senla.courses.autoservice.model.Order;
-import com.senla.courses.autoservice.model.enums.OrderStatus;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -17,10 +16,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
-import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Repository
@@ -97,7 +93,7 @@ public class OrderDao extends AbstractJpaDao<Order> implements IOrderDao {
         if (order != null) {
             return order.getMasters();
         } else {
-            throw new OrderNotFoundException();
+            throw new OrderNotFoundException("Order not found");
         }
     }
 
