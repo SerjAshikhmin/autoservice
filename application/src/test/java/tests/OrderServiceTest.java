@@ -3,6 +3,11 @@ package tests;
 import com.senla.courses.autoservice.dao.interfaces.IGaragePlaceDao;
 import com.senla.courses.autoservice.dao.interfaces.IMasterDao;
 import com.senla.courses.autoservice.dao.interfaces.IOrderDao;
+import com.senla.courses.autoservice.dto.MasterDto;
+import com.senla.courses.autoservice.dto.OrderDto;
+import com.senla.courses.autoservice.dto.mappers.GaragePlaceMapper;
+import com.senla.courses.autoservice.dto.mappers.MasterMapper;
+import com.senla.courses.autoservice.dto.mappers.OrderMapper;
 import com.senla.courses.autoservice.exceptions.orderexceptions.OrderNotFoundException;
 import com.senla.courses.autoservice.model.GaragePlace;
 import com.senla.courses.autoservice.model.Master;
@@ -17,8 +22,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -31,6 +34,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 
@@ -53,28 +57,33 @@ public class OrderServiceTest {
     private IMasterDao masterDao;
     @Autowired
     private IGaragePlaceDao garagePlaceDao;
+    @Autowired
+    private MasterMapper masterMapper;
+    @Autowired
+    private OrderMapper orderMapper;
+    @Autowired
+    private GaragePlaceMapper garagePlaceMapper;
 
     @BeforeAll
     public static void startOrderServiceTests() {
         log.info("Starting order service tests");
     }
 
-    /*@Test
+    @Test
     public void validateNewOrderAdding() {
         log.info("Validating new order adding");
         when(orderDao.addOrder(any(Order.class))).thenReturn(1);
         when(masterDao.getAllMasters()).thenReturn(testData.getMastersList());
         when(garagePlaceDao.getGaragePlaceById(1, 1)).thenReturn(testData.getGarageList().get(0).getGaragePlaces().get(0));
-        List<Master> masters1 = new ArrayList<>();
+        List<MasterDto> masters1 = new ArrayList<>();
         masters1.add(masterService.findMasterByName("Evgeniy"));
-        List<Master> masters2 = new ArrayList<>();
-        masters2.add(masterService.findMasterByName("UnknownMaster"));
+        List<MasterDto> masters2 = new ArrayList<>();
 
-        orderService.addOrder(new Order(1, LocalDateTime.of(2020, Month.JUNE, 1, 11, 0),
+        orderService.addOrder(new OrderDto(1, LocalDateTime.of(2020, Month.JUNE, 1, 11, 0),
                 LocalDateTime.of(2020, Month.JUNE, 1, 12, 0),
                 LocalDateTime.of(2020, Month.JUNE, 1, 13, 0),
                 "Oil change", 1000, garageService.findGaragePlaceById(1, 1), masters1, OrderStatus.ACCEPTED));
-        orderService.addOrder(new Order(1, LocalDateTime.of(2020, Month.JUNE, 1, 11, 0),
+        orderService.addOrder(new OrderDto(1, LocalDateTime.of(2020, Month.JUNE, 1, 11, 0),
                 LocalDateTime.of(2020, Month.JUNE, 1, 12, 0),
                 LocalDateTime.of(2020, Month.JUNE, 1, 13, 0),
                 "Oil change", 1000, garageService.findGaragePlaceById(1, 1), masters2, OrderStatus.ACCEPTED));
@@ -82,21 +91,20 @@ public class OrderServiceTest {
         verify(orderDao).addOrder(any(Order.class));
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "1, 1",
-            "5, 0"
-    })
-    public void validateRemovingOrder(int orderId, int expectedResult) {
+    @Test
+    public void validateRemovingOrder() {
         log.info("Validating order removing");
         when(orderDao.removeOrder(any(Order.class))).thenReturn(1);
         when(orderDao.getAllOrders()).thenReturn(testData.getOrdersList());
 
-        orderService.removeOrder(orderId);
+        orderService.removeOrder(1);
 
         verify(orderDao, atLeastOnce()).removeOrder(any(Order.class));
         verify(masterDao, atLeastOnce()).updateMaster(any(Master.class));
         verify(garagePlaceDao, atLeastOnce()).updateGaragePlace(any(GaragePlace.class));
+        assertThrows(OrderNotFoundException.class, () -> {
+            orderService.removeOrder(5);
+        });
     }
 
     @Test
@@ -105,9 +113,9 @@ public class OrderServiceTest {
         when(orderDao.getAllOrders()).thenReturn(testData.getOrdersList());
         List<Order> expectedResult = testData.getOrdersList();
 
-        List<Order> result = orderService.getAllOrders();
+        List<OrderDto> result = orderService.getAllDtoOrders();
 
-        assertEquals(result, expectedResult);
+        assertEquals(result, orderMapper.orderListToOrderDtoList(expectedResult));
         verify(orderDao, atLeastOnce()).getAllOrders();
     }
 
@@ -131,17 +139,17 @@ public class OrderServiceTest {
         Collections.sort(allOrdersSortedBySubmissionDateExpected, Comparator.comparing(Order::getSubmissionDate));
         List<Order> noSortedExpected = testData.getOrdersList();
 
-        List<Order> allOrdersSortedByCost = orderService.getAllOrdersSorted("byCost");
-        List<Order> allOrdersSortedByEndDate = orderService.getAllOrdersSorted("byEndDate");
-        List<Order> allOrdersSortedByStartDate = orderService.getAllOrdersSorted("byStartDate");
-        List<Order> allOrdersSortedBySubmissionDate = orderService.getAllOrdersSorted("bySubmissionDate");
-        List<Order> noSorted = orderService.getAllOrdersSorted("wrongSortMethod");
+        List<OrderDto> allOrdersSortedByCost = orderService.getAllOrdersSorted("byCost");
+        List<OrderDto> allOrdersSortedByEndDate = orderService.getAllOrdersSorted("byEndDate");
+        List<OrderDto> allOrdersSortedByStartDate = orderService.getAllOrdersSorted("byStartDate");
+        List<OrderDto> allOrdersSortedBySubmissionDate = orderService.getAllOrdersSorted("bySubmissionDate");
+        List<OrderDto> noSorted = orderService.getAllOrdersSorted("wrongSortMethod");
 
-        assertEquals(allOrdersSortedByCost, allOrdersSortedByCostExpected);
-        assertEquals(allOrdersSortedByEndDate, allOrdersSortedByEndDateExpected);
-        assertEquals(allOrdersSortedByStartDate, allOrdersSortedByStartDateExpected);
-        assertEquals(allOrdersSortedBySubmissionDate, allOrdersSortedBySubmissionDateExpected);
-        assertEquals(noSorted, noSortedExpected);
+        assertEquals(allOrdersSortedByCost, orderMapper.orderListToOrderDtoList(allOrdersSortedByCostExpected));
+        assertEquals(allOrdersSortedByEndDate, orderMapper.orderListToOrderDtoList(allOrdersSortedByEndDateExpected));
+        assertEquals(allOrdersSortedByStartDate, orderMapper.orderListToOrderDtoList(allOrdersSortedByStartDateExpected));
+        assertEquals(allOrdersSortedBySubmissionDate, orderMapper.orderListToOrderDtoList(allOrdersSortedBySubmissionDateExpected));
+        assertEquals(noSorted, orderMapper.orderListToOrderDtoList(noSortedExpected));
         verify(orderDao, atLeastOnce()).getAllOrders();
     }
 
@@ -150,9 +158,9 @@ public class OrderServiceTest {
         log.info("Validating getting all orders in progress");
         List<Order> expectedResult = testData.getAllOrdersInProgress();
 
-        List<Order> result = orderService.getAllOrdersInProgress(null);
+        List<OrderDto> result = orderService.getAllOrdersInProgress(null);
 
-        assertEquals(result, expectedResult);
+        assertEquals(result, orderMapper.orderListToOrderDtoList(expectedResult));
         verify(orderDao, atLeastOnce()).getAllOrders();
     }
 
@@ -173,10 +181,10 @@ public class OrderServiceTest {
         when(orderDao.getMastersByOrder(testData.getOrdersList().get(0))).thenReturn(testData.getOrdersList().get(0).getMasters());
         List<Master> expectedResult = testData.getOrdersList().get(0).getMasters();
 
-        List<Master> result = orderService.getMastersByOrder(1);
+        List<MasterDto> result = orderService.getMastersByOrder(1);
 
-        assertEquals(result, expectedResult);
-        verify(orderDao).getMastersByOrder(any(Order.class));
+        assertEquals(result, masterMapper.masterListToMasterDtoList(expectedResult));
+        verify(orderDao, atLeastOnce()).getAllOrders();
     }
 
     @Test
@@ -184,10 +192,10 @@ public class OrderServiceTest {
         log.info("Validating getting orders by period");
         Order expectedResult = testData.getOrdersList().get(0);
 
-        Order result = orderService.getOrdersByPeriod(LocalDateTime.of(2020, Month.JUNE, 1, 9, 0),
+        OrderDto result = orderService.getOrdersByPeriod(LocalDateTime.of(2020, Month.JUNE, 1, 9, 0),
                         LocalDateTime.of(2020, Month.JUNE, 30, 18, 0), null).get(0);
 
-        assertEquals(result, expectedResult);
+        assertEquals(result, orderMapper.orderToOrderDto(expectedResult));
         verify(orderDao, atLeastOnce()).getAllOrders();
     }
 
@@ -196,9 +204,9 @@ public class OrderServiceTest {
         log.info("Validating finding order by id");
         Order expectedResult = testData.getOrdersList().get(0);
 
-        Order result = orderService.findOrderById(1);
+        OrderDto result = orderService.findOrderById(1);
 
-        assertEquals(result, expectedResult);
+        assertEquals(result, orderMapper.orderToOrderDto(expectedResult));
         verify(orderDao, atLeastOnce()).getAllOrders();
     }
 
@@ -206,37 +214,34 @@ public class OrderServiceTest {
     public void validateFindingUnknownOrderById() {
         log.info("Validating finding unknown order by id");
 
-        Order result = orderService.findOrderById(10);
-
-        assertEquals(result, null);
-        verify(orderDao, atLeastOnce()).getAllOrders();
+        assertThrows(OrderNotFoundException.class, () -> {
+            orderService.findOrderById(10);
+        });
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "1, 1",
-            "5, 0"
-    })
-    public void validateCancellingOrder(int orderId, int expectedResult) {
+    @Test
+    public void validateCancellingOrder() {
         log.info("Validating order cancelling");
         when(orderDao.updateOrder(any(Order.class))).thenReturn(1);
 
-        orderService.cancelOrder(orderId);
+        orderService.cancelOrder(1);
 
         verify(orderDao, atLeastOnce()).updateOrder(any(Order.class));
+        assertThrows(OrderNotFoundException.class, () -> {
+            orderService.cancelOrder(5);
+        });
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "3, 1",
-            "5, 0"
-    })
-    public void validateClosingOrder(int orderId, int expectedResult) {
+    @Test
+    public void validateClosingOrder() {
         log.info("Validating order closing");
 
-        orderService.closeOrder(orderId);
+        orderService.closeOrder(1);
 
         verify(orderDao, atLeastOnce()).updateOrder(any(Order.class));
+        assertThrows(OrderNotFoundException.class, () -> {
+            orderService.closeOrder(5);
+        });
     }
 
     @Test
@@ -244,11 +249,11 @@ public class OrderServiceTest {
         log.info("Validating order time updating");
         Order order = testData.getOrdersList().get(0);
 
-        orderService.updateOrderTime(order, LocalDateTime.of(2020, Month.JUNE, 1, 12, 0),
+        orderService.updateOrderTime(orderMapper.orderToOrderDto(order), LocalDateTime.of(2020, Month.JUNE, 1, 12, 0),
                 LocalDateTime.of(2020, Month.JUNE, 1, 15, 0));
 
         verify(orderDao, atLeastOnce()).updateOrder(any(Order.class));
-    }*/
+    }
 
     @AfterAll
     public static void endMasterServiceTests() {

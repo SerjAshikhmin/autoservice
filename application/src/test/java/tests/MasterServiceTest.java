@@ -2,9 +2,10 @@ package tests;
 
 import com.senla.courses.autoservice.dao.interfaces.IMasterDao;
 import com.senla.courses.autoservice.dto.MasterDto;
+import com.senla.courses.autoservice.dto.mappers.MasterMapper;
+import com.senla.courses.autoservice.dto.mappers.OrderMapper;
 import com.senla.courses.autoservice.exceptions.masterexceptions.MasterNotFoundException;
 import com.senla.courses.autoservice.model.Master;
-import com.senla.courses.autoservice.model.Order;
 import com.senla.courses.autoservice.service.interfaces.IMasterService;
 import config.TestConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,10 @@ public class MasterServiceTest {
     private TestData testData;
     @Autowired
     private IMasterDao masterDao;
+    @Autowired
+    private MasterMapper masterMapper;
+    @Autowired
+    private OrderMapper orderMapper;
 
     @BeforeAll
     public static void startMasterServiceTests() {
@@ -54,29 +59,28 @@ public class MasterServiceTest {
         verify(masterDao).addMaster(any(Master.class));
     }
 
-    /*@ParameterizedTest
-    @CsvSource({
-        "Ivan, 1",
-        "Arsen, 0"
-    })
-    public void validateMasterRemoving(String masterName, int expectedResult) {
+    @Test
+    public void validateMasterRemoving() {
         log.info("Validating master removing");
-        when(masterDao.removeMaster(any(MasterDto.class))).thenReturn(1);
+        when(masterDao.removeMaster(any(Master.class))).thenReturn(1);
         when(masterDao.getAllMasters()).thenReturn(testData.getMastersList());
 
-        masterService.removeMaster(masterName);
+        masterService.removeMaster("Ivan");
 
         verify(masterDao).removeMaster(any(Master.class));
+        assertThrows(MasterNotFoundException.class, () -> {
+            masterService.removeMaster("Arsen");
+        });
     }
 
     @Test
     public void validateMasterUpdating() {
         log.info("Validating master updating");
         when(masterDao.updateMaster(any(Master.class))).thenReturn(1);
-        MasterDto master = testData.getMastersList().get(0);
+        Master master = testData.getMastersList().get(0);
         master.setCategory(6);
 
-        masterService.updateMaster(master);
+        masterService.updateMaster(masterMapper.masterToMasterDto(master));
 
         verify(masterDao).updateMaster(any(Master.class));
     }
@@ -89,7 +93,7 @@ public class MasterServiceTest {
         List<MasterDto> result = masterService.getAllDtoMasters();
         List<Master> expectedResult = testData.getMastersList();
 
-        assertEquals(result, expectedResult);
+        assertEquals(result, masterMapper.masterListToMasterDtoList(expectedResult));
         verify(masterDao, atLeastOnce()).getAllMasters();
     }
 
@@ -107,13 +111,13 @@ public class MasterServiceTest {
             else return -1;
         });
 
-        List<Master> sortedByName = masterService.getAllMastersSorted("byName");
-        List<Master> sortedByBusy = masterService.getAllMastersSorted("byBusy");
-        List<Master> noSorted = masterService.getAllMastersSorted("wrongSortMethod");
+        List<MasterDto> sortedByName = masterService.getAllMastersSorted("byName");
+        List<MasterDto> sortedByBusy = masterService.getAllMastersSorted("byBusy");
+        List<MasterDto> noSorted = masterService.getAllMastersSorted("wrongSortMethod");
 
-        assertEquals(sortedByName, sortedByNameExpected);
-        assertEquals(sortedByBusy, sortedByBusyExpected);
-        assertEquals(noSorted, noSortedExpected);
+        assertEquals(sortedByName, masterMapper.masterListToMasterDtoList(sortedByNameExpected));
+        assertEquals(sortedByBusy, masterMapper.masterListToMasterDtoList(sortedByBusyExpected));
+        assertEquals(noSorted, masterMapper.masterListToMasterDtoList(noSortedExpected));
         verify(masterDao, atLeastOnce()).getAllMasters();
     }
 
@@ -122,36 +126,10 @@ public class MasterServiceTest {
         log.info("Validating getting all free masters");
         List<Master> expectedResult = testData.getAllFreeMasters();
 
-        List<Master> result = masterService.getAllFreeMasters();
+        List<MasterDto> result = masterService.getAllFreeMasters();
 
-        assertEquals(result, expectedResult);
+        assertEquals(result, masterMapper.masterListToMasterDtoList(expectedResult));
         verify(masterDao, atLeastOnce()).getAllMasters();
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-            "Evgeniy, 0",
-            "Ivan, 2"
-    })
-    public void validateGettingCurrentOrder(String masterName, int masterId) throws MasterNotFoundException {
-        log.info("Validating current order getting");
-        when(masterDao.getCurrentOrder(testData.getMastersList().get(masterId))).thenReturn(testData.getMastersList().get(masterId).getOrder());
-        Order expectedResult = testData.getOrdersList().get(masterId);
-
-        Order result = masterService.getCurrentOrder(masterName);
-
-        assertEquals(result, expectedResult);
-        verify(masterDao, atLeastOnce()).getCurrentOrder(any(Master.class));
-    }
-
-    @Test
-    public void validateGettingCurrentOrderWithUnknownMaster() throws MasterNotFoundException {
-        log.info("Validating current order getting with MasterNotFoundException");
-
-        Order result = masterService.getCurrentOrder("Arsen");
-
-        assertEquals(result, null);
-        verify(masterDao).getCurrentOrder(null);
     }
 
     @ParameterizedTest
@@ -163,9 +141,9 @@ public class MasterServiceTest {
         log.info("Validating finding master by name");
         Master expectedResult = testData.getMastersList().get(masterId);
 
-        Master result = masterService.findMasterByName(masterName);
+        MasterDto result = masterService.findMasterByName(masterName);
 
-        assertEquals(result, expectedResult);
+        assertEquals(result, masterMapper.masterToMasterDto(expectedResult));
         verify(masterDao, atLeastOnce()).getAllMasters();
     }
 
@@ -173,10 +151,9 @@ public class MasterServiceTest {
     public void validateFindingUnknownMasterByName() {
         log.info("Validating finding unknown master by name");
 
-        Master result = masterService.findMasterByName("Arsen");
-
-        assertEquals(result, null);
-        verify(masterDao, atLeastOnce()).getMasterById(anyInt());
+        assertThrows(MasterNotFoundException.class, () -> {
+            masterService.findMasterByName("Arsen");
+        });
     }
 
     @Test
@@ -185,9 +162,9 @@ public class MasterServiceTest {
         when(masterDao.getMasterById(1)).thenReturn(testData.getMastersList().get(0));
         Master expectedResult = testData.getMastersList().get(0);
 
-        Master result = masterService.findMasterById(1);
+        MasterDto result = masterService.findMasterById(1);
 
-        assertEquals(result, expectedResult);
+        assertEquals(result, masterMapper.masterToMasterDto(expectedResult));
         verify(masterDao, atLeastOnce()).getMasterById(anyInt());
     }
 
@@ -195,11 +172,11 @@ public class MasterServiceTest {
     public void validateFindingUnknownMasterById() {
         log.info("Validating finding unknown master by id");
 
-        Master result = masterService.findMasterById(1);
+        MasterDto result = masterService.findMasterById(1);
 
         assertEquals(result, null);
         verify(masterDao, atLeastOnce()).getMasterById(anyInt());
-    }*/
+    }
 
     @AfterAll
     public static void endMasterServiceTests() {

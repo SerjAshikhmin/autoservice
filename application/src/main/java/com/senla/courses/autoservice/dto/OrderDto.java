@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @NoArgsConstructor
 @Setter
@@ -55,5 +56,26 @@ public class OrderDto {
                 kindOfWork, cost, status.toString(), garagePlace, masters);
 
         return result;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        OrderDto orderDto = (OrderDto) o;
+        return id == orderDto.id &&
+                cost == orderDto.cost &&
+                Objects.equals(submissionDate, orderDto.submissionDate) &&
+                Objects.equals(startDate, orderDto.startDate) &&
+                Objects.equals(endDate, orderDto.endDate) &&
+                kindOfWork.equals(orderDto.kindOfWork) &&
+                Objects.equals(garagePlace, orderDto.garagePlace) &&
+                Objects.equals(masters, orderDto.masters) &&
+                status == orderDto.status;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, submissionDate, startDate, endDate, kindOfWork, cost, garagePlace, masters, status);
     }
 }

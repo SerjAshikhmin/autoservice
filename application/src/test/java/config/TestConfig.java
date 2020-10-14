@@ -5,6 +5,7 @@ import com.senla.courses.autoservice.dao.GaragePlaceDao;
 import com.senla.courses.autoservice.dao.MasterDao;
 import com.senla.courses.autoservice.dao.OrderDao;
 import com.senla.courses.autoservice.dao.jpadao.DbJpaConnector;
+import com.senla.courses.autoservice.dto.mappers.*;
 import com.senla.courses.autoservice.exceptions.masterexceptions.MasterNotFoundException;
 import com.senla.courses.autoservice.exceptions.orderexceptions.OrderNotFoundException;
 import com.senla.courses.autoservice.service.GarageService;
@@ -106,5 +107,25 @@ public class TestConfig {
     @Bean
     public EntityManagerFactory entityManagerFactory() {
         return mock(EntityManagerFactory.class);
+    }
+
+    @Bean
+    public MasterMapper masterMapper() {
+        return new MasterMapperImpl();
+    }
+
+    @Bean
+    public OrderMapper orderMapper() {
+        return new OrderMapperImpl();
+    }
+
+    @Bean
+    public GarageMapper garageMapper() {
+        return new GarageMapperImpl();
+    }
+
+    @Bean
+    public GaragePlaceMapper garagePlaceMapper() {
+        return new GaragePlaceMapperImpl();
     }
 }

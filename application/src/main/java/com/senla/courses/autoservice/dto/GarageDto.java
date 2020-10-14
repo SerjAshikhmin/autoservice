@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Objects;
 
 @NoArgsConstructor
 @Setter
@@ -27,5 +28,20 @@ public class GarageDto {
     public String toString() {
         String result = String.format("Garage № %d, address: %s, garagePlaces: ", id, address);
         return result + garagePlaces;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GarageDto garageDto = (GarageDto) o;
+        return id == garageDto.id &&
+                address.equals(garageDto.address) &&
+                Objects.equals(garagePlaces, garageDto.garagePlaces);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, address, garagePlaces);
     }
 }

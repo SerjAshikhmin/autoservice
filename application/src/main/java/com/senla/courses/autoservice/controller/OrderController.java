@@ -2,11 +2,13 @@ package com.senla.courses.autoservice.controller;
 
 import com.senla.courses.autoservice.dto.MasterDto;
 import com.senla.courses.autoservice.dto.OrderDto;
+import com.senla.courses.autoservice.dto.validators.OrderDtoValidator;
 import com.senla.courses.autoservice.service.interfaces.IOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -19,6 +21,8 @@ public class OrderController {
 
     @Autowired
     private IOrderService orderService;
+    @Autowired
+    private OrderDtoValidator orderDtoValidator;
 
     @GetMapping("")
     public ResponseEntity<List<OrderDto>> getAllOrders() {
@@ -36,7 +40,11 @@ public class OrderController {
 
     @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE,
                              produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> addOrder(@RequestBody OrderDto order) {
+    public ResponseEntity<?> addOrder(@RequestBody OrderDto order, BindingResult result) {
+        orderDtoValidator.validate(order, result);
+        if (result.hasErrors()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         orderService.addOrder(order);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }

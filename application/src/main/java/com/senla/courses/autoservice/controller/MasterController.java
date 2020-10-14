@@ -1,12 +1,12 @@
 package com.senla.courses.autoservice.controller;
 
 import com.senla.courses.autoservice.dto.MasterDto;
-import com.senla.courses.autoservice.dto.OrderDto;
+import com.senla.courses.autoservice.dto.validators.MasterDtoValidator;
 import com.senla.courses.autoservice.service.interfaces.IMasterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +17,8 @@ public class MasterController {
 
     @Autowired
     private IMasterService masterService;
+    @Autowired
+    private MasterDtoValidator masterDtoValidator;
 
     @GetMapping("")
     public ResponseEntity<List<MasterDto>> getAllMasters() {
@@ -37,13 +39,21 @@ public class MasterController {
     }
 
     @PostMapping("")
-    public ResponseEntity<?> addMaster(@Validated MasterDto master) {
+    public ResponseEntity<?> addMaster(@RequestBody MasterDto master, BindingResult result) {
+        masterDtoValidator.validate(master, result);
+        if (result.hasErrors()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         masterService.addMaster(master);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @PutMapping("")
-    public ResponseEntity<?> updateMaster(@Validated MasterDto master) {
+    public ResponseEntity<?> updateMaster(@RequestBody MasterDto master, BindingResult result) {
+        masterDtoValidator.validate(master, result);
+        if (result.hasErrors()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         masterService.updateMaster(master);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -52,12 +62,6 @@ public class MasterController {
     public ResponseEntity<?> removeMaster(@PathVariable("name") String name) {
         masterService.removeMaster(name);
         return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @GetMapping("/orders/{name}")
-    public ResponseEntity<?> getCurrentOrder(@PathVariable("name") String name) {
-        OrderDto order = masterService.getCurrentOrder(name);
-        return ResponseEntity.ok(order);
     }
 
     public void importMaster(String fileName) {

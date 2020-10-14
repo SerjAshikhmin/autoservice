@@ -1,7 +1,6 @@
 package com.senla.courses.autoservice.service.interfaces;
 
 import com.senla.courses.autoservice.dto.MasterDto;
-import com.senla.courses.autoservice.dto.OrderDto;
 import com.senla.courses.autoservice.exceptions.masterexceptions.MasterAddingException;
 import com.senla.courses.autoservice.exceptions.masterexceptions.MasterModifyingException;
 import com.senla.courses.autoservice.exceptions.masterexceptions.MasterNotFoundException;
@@ -20,7 +19,6 @@ public interface IMasterService {
     List<MasterDto> getAllDtoMasters() throws MasterNotFoundException;
     List<MasterDto> getAllMastersSorted(String sortBy) throws MasterNotFoundException;
     List<MasterDto> getAllFreeMasters() throws MasterNotFoundException;
-    OrderDto getCurrentOrder(String name) throws MasterNotFoundException;
     MasterDto findMasterByName(String name) throws MasterNotFoundException;
     MasterDto findMasterById(int id) throws MasterNotFoundException;
     void importMaster(String fileName);

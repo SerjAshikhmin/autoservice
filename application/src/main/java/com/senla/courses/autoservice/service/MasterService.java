@@ -6,7 +6,6 @@ import com.senla.courses.autoservice.dao.interfaces.IMasterDao;
 import com.senla.courses.autoservice.dao.interfaces.IOrderDao;
 import com.senla.courses.autoservice.dao.jpadao.DbJpaConnector;
 import com.senla.courses.autoservice.dto.MasterDto;
-import com.senla.courses.autoservice.dto.OrderDto;
 import com.senla.courses.autoservice.dto.mappers.MasterMapper;
 import com.senla.courses.autoservice.dto.mappers.OrderMapper;
 import com.senla.courses.autoservice.exceptions.masterexceptions.MasterAddingException;
@@ -66,8 +65,8 @@ public class MasterService implements IMasterService {
     @Override
     public void removeMaster(String name) throws MasterModifyingException {
         EntityTransaction transaction = null;
+        Master master = mapper.masterDtoToMaster(findMasterByName(name));
         try {
-            Master master = mapper.masterDtoToMaster(findMasterByName(name));
             transaction = dbJpaConnector.getTransaction();
             transaction.begin();
             masterDao.removeMaster(master);
@@ -143,16 +142,6 @@ public class MasterService implements IMasterService {
         } catch (Exception e) {
             log.error(e.getMessage());
             return null;
-        }
-    }
-
-    @Override
-    public OrderDto getCurrentOrder(String name) throws MasterNotFoundException {
-        try {
-            return orderMapper.orderToOrderDto(masterDao.getCurrentOrder(mapper.masterDtoToMaster(findMasterByName(name))));
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new MasterNotFoundException(e.getMessage());
         }
     }
 

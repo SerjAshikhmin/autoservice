@@ -73,8 +73,11 @@ public class OrderService implements IOrderService {
     @Override
     //@Transactional
     public void addOrder(OrderDto order) throws MasterNotFoundException, OrderAddingException {
-        List<MasterDto> masters = new ArrayList<>();
-        MasterDto master = order.getMasters().get(0);
+        List<MasterDto> masters = order.getMasters();
+        if (masters == null || masters.isEmpty()) {
+            throw new MasterNotFoundException("Masters not found");
+        }
+        MasterDto master = masters.get(0);
         if (master == null) {
             log.error(String.format("Не найден мастер для заказа №%d", order.getId()));
             throw new MasterNotFoundException("Master not found");
@@ -250,7 +253,7 @@ public class OrderService implements IOrderService {
     public List<MasterDto> getMastersByOrder (int id) {
         Order order = orderMapper.orderDtoToOrder(findOrderById(id));
         try {
-            return masterMapper.masterListToMasterDtoList(orderDao.getMastersByOrder(order));
+            return masterMapper.masterListToMasterDtoList(order.getMasters());
         } catch (OrderNotFoundException e) {
             log.error("Неправильный номер заказа");
             return null;

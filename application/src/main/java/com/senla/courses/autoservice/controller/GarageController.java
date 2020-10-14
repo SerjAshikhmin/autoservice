@@ -2,10 +2,13 @@ package com.senla.courses.autoservice.controller;
 
 import com.senla.courses.autoservice.dto.GarageDto;
 import com.senla.courses.autoservice.dto.GaragePlaceDto;
+import com.senla.courses.autoservice.dto.validators.GarageDtoValidator;
+import com.senla.courses.autoservice.dto.validators.GaragePlaceDtoValidator;
 import com.senla.courses.autoservice.service.interfaces.IGarageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +19,10 @@ public class GarageController {
 
     @Autowired
     private IGarageService garageService;
+    @Autowired
+    private GarageDtoValidator garageDtoValidator;
+    @Autowired
+    private GaragePlaceDtoValidator garagePlaceDtoValidator;
 
     @GetMapping("")
     public ResponseEntity<List<GarageDto>> getAllGarages() {
@@ -24,7 +31,11 @@ public class GarageController {
     }
 
     @PostMapping("")
-    public ResponseEntity<?> addGarage(@RequestBody GarageDto garage) {
+    public ResponseEntity<?> addGarage(@RequestBody GarageDto garage, BindingResult result) {
+        garageDtoValidator.validate(garage, result);
+        if (result.hasErrors()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         garageService.addGarage(garage);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
@@ -36,7 +47,11 @@ public class GarageController {
     }
 
     @PostMapping("/garagePlaces")
-    public ResponseEntity<?> addGaragePlace(@RequestBody GaragePlaceDto garagePlace) {
+    public ResponseEntity<?> addGaragePlace(@RequestBody GaragePlaceDto garagePlace, BindingResult result) {
+        garagePlaceDtoValidator.validate(garagePlace, result);
+        if (result.hasErrors()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         garageService.addGaragePlace(garagePlace);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
