@@ -1,8 +1,11 @@
 package com.senla.courses.config;
 
+import com.senla.courses.config.security.WebSecurityConfig;
+import org.springframework.core.annotation.Order;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 
+@Order(1)
 public class WebAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
     @Override
     protected Class<?>[] getRootConfigClasses() {
@@ -12,7 +15,7 @@ public class WebAppInitializer extends AbstractAnnotationConfigDispatcherServlet
     @Override
     protected Class<?>[] getServletConfigClasses() {
         return new Class<?>[] {
-            WebConfig.class
+            WebConfig.class, WebSecurityConfig.class
         };
     }
 
@@ -20,4 +23,5 @@ public class WebAppInitializer extends AbstractAnnotationConfigDispatcherServlet
     protected String[] getServletMappings() {
         return new String[] {"/"};
     }
+
 }

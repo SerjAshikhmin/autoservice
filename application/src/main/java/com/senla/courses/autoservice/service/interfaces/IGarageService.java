@@ -5,8 +5,8 @@ import com.senla.courses.autoservice.dto.GaragePlaceDto;
 import com.senla.courses.autoservice.exceptions.garageexceptions.GarageAddingException;
 import com.senla.courses.autoservice.exceptions.garageexceptions.GarageNotFoundException;
 import com.senla.courses.autoservice.exceptions.garageexceptions.GarageRemovingException;
-import com.senla.courses.autoservice.model.Garage;
-import com.senla.courses.autoservice.model.GaragePlace;
+import com.senla.courses.autoservice.model.domain.Garage;
+import com.senla.courses.autoservice.model.domain.GaragePlace;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

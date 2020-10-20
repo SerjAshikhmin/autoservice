@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +31,7 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<OrderDto> findOrderById(@PathVariable("id") int id) {
         final OrderDto order = orderService.findOrderById(id);
@@ -38,6 +40,7 @@ public class OrderController {
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE,
                              produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addOrder(@RequestBody OrderDto order, BindingResult result) {
@@ -49,24 +52,28 @@ public class OrderController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> removeOrder(@PathVariable("id") int id) {
         orderService.removeOrder(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/cancel/{id}")
     public ResponseEntity<?> cancelOrder(@PathVariable("id") int id) {
         orderService.cancelOrder(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/close/{id}")
     public ResponseEntity<?> closeOrder(@PathVariable("id") int id) {
         orderService.closeOrder(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/shiftEndTimeOrders")
     public ResponseEntity<?> shiftEndTimeOrders(@RequestParam("hours") int hours, @RequestParam("minutes") int minutes) {
         orderService.shiftEndTimeOrders(hours, minutes);

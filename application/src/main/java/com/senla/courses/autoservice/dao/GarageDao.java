@@ -3,7 +3,7 @@ package com.senla.courses.autoservice.dao;
 import com.senla.courses.autoservice.dao.interfaces.IGarageDao;
 import com.senla.courses.autoservice.dao.jpadao.AbstractJpaDao;
 import com.senla.courses.autoservice.dao.jpadao.DbJpaConnector;
-import com.senla.courses.autoservice.model.Garage;
+import com.senla.courses.autoservice.model.domain.Garage;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;

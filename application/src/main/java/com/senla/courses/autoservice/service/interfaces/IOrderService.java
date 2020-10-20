@@ -6,7 +6,7 @@ import com.senla.courses.autoservice.exceptions.masterexceptions.MasterNotFoundE
 import com.senla.courses.autoservice.exceptions.orderexceptions.OrderAddingException;
 import com.senla.courses.autoservice.exceptions.orderexceptions.OrderModifyingException;
 import com.senla.courses.autoservice.exceptions.orderexceptions.OrderNotFoundException;
-import com.senla.courses.autoservice.model.Order;
+import com.senla.courses.autoservice.model.domain.Order;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

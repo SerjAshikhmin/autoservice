@@ -4,7 +4,7 @@ import com.senla.courses.autoservice.dto.MasterDto;
 import com.senla.courses.autoservice.exceptions.masterexceptions.MasterAddingException;
 import com.senla.courses.autoservice.exceptions.masterexceptions.MasterModifyingException;
 import com.senla.courses.autoservice.exceptions.masterexceptions.MasterNotFoundException;
-import com.senla.courses.autoservice.model.Master;
+import com.senla.courses.autoservice.model.domain.Master;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

@@ -1,8 +1,8 @@
 package com.senla.courses.autoservice.dao.interfaces;
 
 import com.senla.courses.autoservice.exceptions.orderexceptions.OrderNotFoundException;
-import com.senla.courses.autoservice.model.Master;
-import com.senla.courses.autoservice.model.Order;
+import com.senla.courses.autoservice.model.domain.Master;
+import com.senla.courses.autoservice.model.domain.Order;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.PersistenceException;

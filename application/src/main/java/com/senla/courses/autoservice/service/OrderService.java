@@ -16,9 +16,9 @@ import com.senla.courses.autoservice.exceptions.masterexceptions.MasterNotFoundE
 import com.senla.courses.autoservice.exceptions.orderexceptions.OrderAddingException;
 import com.senla.courses.autoservice.exceptions.orderexceptions.OrderModifyingException;
 import com.senla.courses.autoservice.exceptions.orderexceptions.OrderNotFoundException;
-import com.senla.courses.autoservice.model.GaragePlace;
-import com.senla.courses.autoservice.model.Master;
-import com.senla.courses.autoservice.model.Order;
+import com.senla.courses.autoservice.model.domain.GaragePlace;
+import com.senla.courses.autoservice.model.domain.Master;
+import com.senla.courses.autoservice.model.domain.Order;
 import com.senla.courses.autoservice.model.enums.OrderStatus;
 import com.senla.courses.autoservice.service.comparators.order.OrderByCostComparator;
 import com.senla.courses.autoservice.service.comparators.order.OrderByEndDateComparator;

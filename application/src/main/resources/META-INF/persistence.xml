@@ -6,10 +6,12 @@
     <persistence-unit name="com.senla.courses">
         <description>Hibernate EntityManager Demo</description>
         <provider>org.hibernate.ejb.HibernatePersistence</provider>
-        <class>com.senla.courses.autoservice.model.Master</class>
-        <class>com.senla.courses.autoservice.model.Garage</class>
-        <class>com.senla.courses.autoservice.model.GaragePlace</class>
-        <class>com.senla.courses.autoservice.model.Order</class>
+        <class>com.senla.courses.autoservice.model.domain.Master</class>
+        <class>com.senla.courses.autoservice.model.domain.Garage</class>
+        <class>com.senla.courses.autoservice.model.domain.GaragePlace</class>
+        <class>com.senla.courses.autoservice.model.domain.Order</class>
+        <class>com.senla.courses.autoservice.model.security.User</class>
+        <class>com.senla.courses.autoservice.model.security.Role</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>

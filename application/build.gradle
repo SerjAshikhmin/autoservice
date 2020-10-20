@@ -49,6 +49,7 @@ repositories {
 
 dependencies {
     def SPRING_VERSION = '5.2.9.RELEASE'
+    def SPRING_SECURITY_VERSION = '5.4.1'
 
     compile project(':ioc')
     compile project(':utils')
@@ -67,6 +68,9 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-tx', version: SPRING_VERSION
     compile group: 'org.springframework', name: 'spring-orm', version: SPRING_VERSION
     compile group: 'org.springframework', name: 'spring-webmvc', version: SPRING_VERSION
+    compile group: 'org.springframework.security', name: 'spring-security-core', version: SPRING_SECURITY_VERSION
+    compile group: 'org.springframework.security', name: 'spring-security-web', version: SPRING_SECURITY_VERSION
+    compile group: 'org.springframework.security', name: 'spring-security-config', version: SPRING_SECURITY_VERSION
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.2'
     providedCompile group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
     compile group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'

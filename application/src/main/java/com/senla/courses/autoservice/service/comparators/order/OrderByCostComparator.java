@@ -1,7 +1,6 @@
 package com.senla.courses.autoservice.service.comparators.order;
 
-import com.senla.courses.autoservice.model.Order;
-import com.senla.courses.autoservice.service.comparators.master.MasterByBusyComparator;
+import com.senla.courses.autoservice.model.domain.Order;
 
 import java.util.Comparator;
 

@@ -1,4 +1,4 @@
-package com.senla.courses.autoservice.model;
+package com.senla.courses.autoservice.model.domain;
 
 import com.senla.courses.autoservice.model.enums.OrderStatus;
 import lombok.Getter;

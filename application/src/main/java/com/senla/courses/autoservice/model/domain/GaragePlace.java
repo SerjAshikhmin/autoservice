@@ -1,4 +1,4 @@
-package com.senla.courses.autoservice.model;
+package com.senla.courses.autoservice.model.domain;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

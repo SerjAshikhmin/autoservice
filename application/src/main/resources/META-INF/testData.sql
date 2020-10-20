@@ -21,3 +21,12 @@ update Master set busy=true, category=2, name='Alex', orders_id=2 where id=2
 insert into Orders (cost, endDate, kindOfWork, startDate, status, submissionDate, id) values (500, '2020-05-31T12:00', 'Diagnostics', '2020-05-31T11:00', 'ACCEPTED', '2020-05-31T10:00', 3)
 update GaragePlace set area=8, busy=true, garage_id=1, type='Car lift' where id=3
 update Master set busy=true, category=5, name='Ivan', orders_id=3 where id=3
+
+insert into roles (name, id) values ('ROLE_READER', 1)
+insert into users (password, userName, id) values ('pass', 'user', 1)
+insert into users_roles (User_id, roles_id) values (1, 1)
+
+insert into roles (name, id) values ('ROLE_ADMIN', 2)
+insert into users (password, userName, id) values ('sa', 'admin', 2)
+insert into users_roles (User_id, roles_id) values (2, 2)
+insert into users_roles (User_id, roles_id) values (2, 1)

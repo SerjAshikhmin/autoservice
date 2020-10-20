@@ -1,6 +1,6 @@
 package com.senla.courses.autoservice.dao.interfaces;
 
-import com.senla.courses.autoservice.model.GaragePlace;
+import com.senla.courses.autoservice.model.domain.GaragePlace;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.PersistenceException;

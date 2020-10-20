@@ -1,9 +1,9 @@
 package tests;
 
-import com.senla.courses.autoservice.model.Garage;
-import com.senla.courses.autoservice.model.GaragePlace;
-import com.senla.courses.autoservice.model.Master;
-import com.senla.courses.autoservice.model.Order;
+import com.senla.courses.autoservice.model.domain.Garage;
+import com.senla.courses.autoservice.model.domain.GaragePlace;
+import com.senla.courses.autoservice.model.domain.Master;
+import com.senla.courses.autoservice.model.domain.Order;
 import com.senla.courses.autoservice.model.enums.OrderStatus;
 import lombok.Getter;
 

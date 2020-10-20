@@ -11,7 +11,7 @@ import com.senla.courses.autoservice.dto.mappers.OrderMapper;
 import com.senla.courses.autoservice.exceptions.masterexceptions.MasterAddingException;
 import com.senla.courses.autoservice.exceptions.masterexceptions.MasterModifyingException;
 import com.senla.courses.autoservice.exceptions.masterexceptions.MasterNotFoundException;
-import com.senla.courses.autoservice.model.Master;
+import com.senla.courses.autoservice.model.domain.Master;
 import com.senla.courses.autoservice.service.comparators.master.MasterByBusyComparator;
 import com.senla.courses.autoservice.service.comparators.master.MasterByNameComparator;
 import com.senla.courses.autoservice.service.interfaces.IMasterService;

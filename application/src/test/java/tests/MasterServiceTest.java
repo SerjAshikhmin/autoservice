@@ -5,7 +5,7 @@ import com.senla.courses.autoservice.dto.MasterDto;
 import com.senla.courses.autoservice.dto.mappers.MasterMapper;
 import com.senla.courses.autoservice.dto.mappers.OrderMapper;
 import com.senla.courses.autoservice.exceptions.masterexceptions.MasterNotFoundException;
-import com.senla.courses.autoservice.model.Master;
+import com.senla.courses.autoservice.model.domain.Master;
 import com.senla.courses.autoservice.service.interfaces.IMasterService;
 import config.TestConfig;
 import lombok.extern.slf4j.Slf4j;

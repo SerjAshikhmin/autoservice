@@ -5,6 +5,9 @@ import com.senla.courses.autoservice.dto.GaragePlaceDto;
 import com.senla.courses.autoservice.dto.MasterDto;
 import com.senla.courses.autoservice.dto.OrderDto;
 import com.senla.courses.autoservice.model.enums.OrderStatus;
+import com.senla.courses.autoservice.model.security.Role;
+import com.senla.courses.autoservice.model.security.User;
+import com.senla.courses.autoservice.service.UserService;
 import com.senla.courses.autoservice.service.interfaces.IGarageService;
 import com.senla.courses.autoservice.service.interfaces.IMasterService;
 import com.senla.courses.autoservice.service.interfaces.IOrderService;
@@ -17,11 +20,13 @@ import org.springframework.web.servlet.ModelAndView;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 @Controller
-public class StartConroller {
+public class StartController {
 
     @Autowired
     private IOrderService orderService;
@@ -29,6 +34,8 @@ public class StartConroller {
     private IMasterService masterService;
     @Autowired
     private IGarageService garageService;
+    @Autowired
+    private UserService userService;
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public ModelAndView startPage() {
@@ -69,5 +76,16 @@ public class StartConroller {
                 LocalDateTime.of(2020, Month.MAY, 31, 11, 0),
                 LocalDateTime.of(2020, Month.MAY, 31, 12, 0),
                 "Diagnostics", 500, garageService.findGaragePlaceById(1, 3), masters, OrderStatus.ACCEPTED));
+
+        Set<Role> roles = new HashSet<>();
+        Role userRole = new Role(1, "READER", new HashSet<User>());
+        roles.add(userRole);
+        userService.addRole(userRole);
+        userService.addUser(new User(1, "user", "pass", roles));
+
+        Role adminRole = new Role(2, "ADMIN", new HashSet<User>());
+        roles.add(adminRole);
+        userService.addRole(adminRole);
+        userService.addUser(new User(2, "admin", "sa", roles));
     }
 }

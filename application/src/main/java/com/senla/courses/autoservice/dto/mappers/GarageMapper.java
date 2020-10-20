@@ -1,7 +1,7 @@
 package com.senla.courses.autoservice.dto.mappers;
 
 import com.senla.courses.autoservice.dto.GarageDto;
-import com.senla.courses.autoservice.model.Garage;
+import com.senla.courses.autoservice.model.domain.Garage;
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 

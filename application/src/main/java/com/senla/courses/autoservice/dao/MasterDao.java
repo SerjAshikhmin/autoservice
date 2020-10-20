@@ -3,8 +3,8 @@ package com.senla.courses.autoservice.dao;
 import com.senla.courses.autoservice.dao.interfaces.IMasterDao;
 import com.senla.courses.autoservice.dao.interfaces.IOrderDao;
 import com.senla.courses.autoservice.dao.jpadao.AbstractJpaDao;
-import com.senla.courses.autoservice.model.Master;
-import com.senla.courses.autoservice.model.Order;
+import com.senla.courses.autoservice.model.domain.Master;
+import com.senla.courses.autoservice.model.domain.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
