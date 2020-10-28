@@ -13,6 +13,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import java.util.List;
 
 
 @Repository
@@ -32,7 +33,7 @@ public class UserDao extends AbstractJpaDao<User> implements IUserDao {
         objCriteria.select(objRoot);
         objCriteria.where(criteriaBuilder.equal(objRoot.get("userName"), userName));
         user = entityManager.createQuery(objCriteria).getSingleResult();
-        Hibernate.initialize(user.getAuthorities());
+        //Hibernate.initialize(user.getAuthorities());
         if (!entityManager.getTransaction().isActive()) {
             dbJpaConnector.closeSession();
         }
@@ -43,5 +44,9 @@ public class UserDao extends AbstractJpaDao<User> implements IUserDao {
     @Override
     public void addUser(User user) throws PersistenceException {
         insert(user);
+    }
+
+    public List<User> getAllUsers() throws PersistenceException {
+        return findAll();
     }
 }

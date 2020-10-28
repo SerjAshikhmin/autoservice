@@ -21,7 +21,7 @@ public class User implements UserDetails {
     private int id;
     private String userName;
     private String password;
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     private Set<Role> roles;
 
     @Override

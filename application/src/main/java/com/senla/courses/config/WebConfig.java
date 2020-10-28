@@ -14,8 +14,8 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 @PropertySource("classpath:config.properties")
 public class WebConfig implements WebMvcConfigurer {
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    /*@Autowired
+    private ObjectMapper objectMapper;*/
 
     @Bean
     ViewResolver viewResolver() {
