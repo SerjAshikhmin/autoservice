@@ -1,0 +1,30 @@
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+             http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
+             version="2.1">
+    <persistence-unit name="com.senla.courses">
+        <description>Hibernate EntityManager Demo</description>
+        <provider>org.hibernate.ejb.HibernatePersistence</provider>
+        <class>com.senla.courses.autoservice.model.domain.Master</class>
+        <class>com.senla.courses.autoservice.model.domain.Garage</class>
+        <class>com.senla.courses.autoservice.model.domain.GaragePlace</class>
+        <class>com.senla.courses.autoservice.model.domain.Order</class>
+        <class>com.senla.courses.autoservice.model.security.User</class>
+        <class>com.senla.courses.autoservice.model.security.Role</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"/>
+            <property name="javax.persistence.jdbc.user" value="sa"/>
+            <property name="javax.persistence.jdbc.password" value="pass"/>
+
+            <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>
+            <property name="javax.persistence.schema-generation.create-source" value="metadata"/>
+            <property name="javax.persistence.schema-generation.drop-source" value="metadata"/>
+            <property name="javax.persistence.sql-load-script-source" value="META-INF/testData.sql"/>
+        </properties>
+    </persistence-unit>
+</persistence>
