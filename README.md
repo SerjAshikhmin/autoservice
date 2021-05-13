@@ -13,4 +13,4 @@
 
 ### Стек технологий:
 
-Spring MVC, Spring Security, Hibernate ORM, JPA, Json Jackson, Spring Validation, Mapstruct, SLF4J, Lombok, Apache Tomcat, H2QL, JUnit, Mockito.
+Spring MVC, Spring Security, Hibernate ORM, JPA, Json Jackson, Spring Validation, Mapstruct, SLF4J, Lombok, Apache Tomcat, H2QL, JUnit, Mockito, Spring MVC Test, Gradle.
